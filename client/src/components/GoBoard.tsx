@@ -146,6 +146,9 @@ export default function GoBoard({
             // クリックマーカー保存用変数
             let lastClickMarker: any = null
 
+            // 現在の手番を取得（黒番: 1, 白番: -1）
+            const currentTurn = game.turn
+
             // カスタム着手点マーカーハンドラーを定義
             const clickMarkerHandler = {
               stone: {
@@ -155,23 +158,37 @@ export default function GoBoard({
                   const yr = board.getY(args.y)
                   const sr = board.stoneRadius
 
-                  // 外側の円（赤色）を描画
+                  // 手番に応じた色を設定
+                  const markerColor = currentTurn === 1 ? '#000000' : '#FFFFFF' // 黒番なら黒、白番なら白
+                  const markerAlpha =
+                    currentTurn === 1 ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.8)'
+
+                  // 外側の円を描画
                   ctx.beginPath()
                   ctx.arc(xr, yr, sr * 0.9, 0, 2 * Math.PI, true)
                   ctx.lineWidth = 3
-                  ctx.strokeStyle = '#ff0000'
+                  ctx.strokeStyle = markerColor
                   ctx.stroke()
 
-                  // 内側の塗りつぶし円（半透明の赤）
+                  // 内側の塗りつぶし円（半透明）
                   ctx.beginPath()
-                  ctx.arc(xr, yr, sr * 0.8, 0, 2 * Math.PI, true)
-                  ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+                  ctx.arc(xr, yr, sr * 1.0, 0, 2 * Math.PI, true)
+                  ctx.fillStyle = markerAlpha
                   ctx.fill()
 
-                  // 中心の点（濃い赤）
+                  // 白番の場合は黒い輪郭を追加
+                  if (currentTurn === -1) {
+                    ctx.beginPath()
+                    ctx.arc(xr, yr, sr * 1.0, 0, 2 * Math.PI, true)
+                    ctx.lineWidth = 2
+                    ctx.strokeStyle = '#000000'
+                    ctx.stroke()
+                  }
+
+                  // 中心の点
                   ctx.beginPath()
                   ctx.arc(xr, yr, sr * 0.2, 0, 2 * Math.PI, true)
-                  ctx.fillStyle = '#ff0000'
+                  ctx.fillStyle = markerColor
                   ctx.fill()
                 },
               },
@@ -340,12 +357,12 @@ export default function GoBoard({
 
                 // 背景の円を描画
                 ctx.beginPath()
-                ctx.arc(xr, yr, sr * 0.8, 0, 2 * Math.PI, true)
+                ctx.arc(xr, yr, sr * 1.0, 0, 2 * Math.PI, true)
                 ctx.fillStyle = args.bgColor
                 ctx.fill()
 
                 // テキストを描画
-                ctx.font = `bold ${sr * 0.8}px Calibri`
+                ctx.font = `bold ${sr * 1.0}px Calibri`
                 ctx.textAlign = 'center'
                 ctx.textBaseline = 'middle'
                 ctx.fillStyle = '#FFFFFF'
