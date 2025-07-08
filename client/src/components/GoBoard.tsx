@@ -135,11 +135,11 @@ export default function GoBoard({
         if (sgfContent) {
           // SGF処理（WGo.Gameクラス使用）
           const game = new window.WGo.Game()
-          loadSgfToGame(game, sgfContent, maxMoves)
+          const lastMove = loadSgfToGame(game, sgfContent, maxMoves)
 
           // 現在のポジションを盤面に反映
           const position = game.getPosition()
-          updateBoardPosition(newBoard, position)
+          updateBoardPosition(newBoard, position, lastMove || undefined)
 
           // アンケート回答ページでのクリック処理（公式addEventListener）
           if (showClickable && onCoordinateSelect) {
@@ -203,20 +203,9 @@ export default function GoBoard({
               // すべてのオブジェクトを削除してから石を再配置
               newBoard.removeAllObjects()
 
-              // 既存の石を再配置
+              // 既存の石を再配置（最終手マークも含む）
               const position = game.getPosition()
-              for (let px = 0; px < position.size; px++) {
-                for (let py = 0; py < position.size; py++) {
-                  const stone = position.get(px, py)
-                  if (stone !== 0) {
-                    newBoard.addObject({
-                      x: px,
-                      y: py,
-                      c: stone,
-                    })
-                  }
-                }
-              }
+              updateBoardPosition(newBoard, position, lastMove || undefined)
 
               // 新しいマーカーを追加（カスタムハンドラー使用）
               lastClickMarker = {
@@ -266,10 +255,11 @@ export default function GoBoard({
   }, [isWgoLoaded, sgfContent, showClickable, resultsData, maxMoves])
 
   // SGFをWGo.Gameに読み込み（公式Game API使用）
-  const loadSgfToGame = (game: any, sgfContent: string, maxMoves?: number) => {
+  const loadSgfToGame = (game: any, sgfContent: string, maxMoves?: number): { x: number; y: number; color: number } | null => {
     try {
       // 簡易SGFパーサー（公式の詳細パーサーがあれば使用推奨）
       const moves = parseSgfMoves(sgfContent)
+      let lastMove: { x: number; y: number; color: number } | null = null
 
       moves.forEach((move, index) => {
         if (maxMoves !== undefined && index >= maxMoves) return
@@ -280,15 +270,23 @@ export default function GoBoard({
           if (Array.isArray(result)) {
             console.log(`Move ${index + 1}: captured ${result.length} stones`)
           }
+          
+          // maxMovesで制限される最後の手を記録
+          if (maxMoves === undefined || index === maxMoves - 1) {
+            lastMove = move
+          }
         }
       })
+      
+      return lastMove
     } catch (error) {
       console.error('Failed to load SGF:', error)
+      return null
     }
   }
 
   // ポジションを盤面に反映（公式Position API使用）
-  const updateBoardPosition = (boardInstance: any, position: any) => {
+  const updateBoardPosition = (boardInstance: any, position: any, lastMove?: { x: number; y: number; color: number }) => {
     boardInstance.removeAllObjects() // 既存オブジェクト削除
 
     for (let x = 0; x < position.size; x++) {
@@ -303,6 +301,37 @@ export default function GoBoard({
           })
         }
       }
+    }
+
+    // 最終手にマークを表示
+    if (lastMove && lastMove.x >= 0 && lastMove.y >= 0) {
+      // カスタムマーカーハンドラーを定義
+      const lastMoveMarkerHandler = {
+        stone: {
+          draw: function (args: any, board: any) {
+            const ctx = board.stone.getContext(args.x, args.y)
+            const xr = board.getX(args.x)
+            const yr = board.getY(args.y)
+            const sr = board.stoneRadius
+
+            // 石の色に応じて円の色を決定（白石には黒丸、黒石には白丸）
+            const markerColor = lastMove.color === window.WGo.B ? '#FFFFFF' : '#000000'
+            
+            // 円を描画
+            ctx.beginPath()
+            ctx.arc(xr, yr, sr * 0.5, 0, 2 * Math.PI, true)
+            ctx.lineWidth = 3
+            ctx.strokeStyle = markerColor
+            ctx.stroke()
+          },
+        },
+      }
+
+      boardInstance.addObject({
+        x: lastMove.x,
+        y: lastMove.y,
+        type: lastMoveMarkerHandler,
+      })
     }
   }
 
