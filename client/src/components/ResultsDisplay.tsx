@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
 import { getUserUuid } from '../utils/uuid'
+import { RangeSlider } from './RangeSlider'
 
 interface Answer {
   id: number
@@ -17,9 +18,20 @@ interface Answer {
 interface ResultsDisplayProps {
   results: Record<string, { votes: number; answers: Answer[] }>
   onDelete: () => void
+  isFiltered?: boolean
+  minRank: number
+  maxRank: number
+  onRangeChange: (min: number, max: number) => void
 }
 
-export function ResultsDisplay({ results, onDelete }: ResultsDisplayProps) {
+export function ResultsDisplay({
+  results,
+  onDelete,
+  isFiltered = false,
+  minRank,
+  maxRank,
+  onRangeChange,
+}: ResultsDisplayProps) {
   const [selectedCoordinate, setSelectedCoordinate] = useState<string | null>(null)
   const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([])
   const userUuid = getUserUuid()
@@ -29,18 +41,15 @@ export function ResultsDisplay({ results, onDelete }: ResultsDisplayProps) {
   useEffect(() => {
     // 碁盤からの詳細表示イベントをリッスン
     const handleShowDetails = (event: CustomEvent) => {
-      console.log('ResultsDisplay received event:', event.detail)
       const { coordinate, data } = event.detail
       setSelectedCoordinate(coordinate)
       setSelectedAnswers(data.answers)
     }
 
     window.addEventListener('showAnswerDetails', handleShowDetails as EventListener)
-    console.log('ResultsDisplay: Event listener registered')
 
     return () => {
       window.removeEventListener('showAnswerDetails', handleShowDetails as EventListener)
-      console.log('ResultsDisplay: Event listener removed')
     }
   }, [])
 
@@ -64,7 +73,10 @@ export function ResultsDisplay({ results, onDelete }: ResultsDisplayProps) {
     <div className="results-display">
       <div className="results-summary">
         <h3>回答集計</h3>
-        <p>総回答数: {totalVotes}票</p>
+        <p>
+          {isFiltered ? 'フィルター適用後の回答数' : '総回答数'}: {totalVotes}票
+        </p>
+        <RangeSlider minValue={minRank} maxValue={maxRank} onRangeChange={onRangeChange} />
       </div>
 
       {selectedCoordinate && selectedAnswers.length > 0 && (

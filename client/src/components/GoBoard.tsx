@@ -35,14 +35,9 @@ export default function GoBoard({
 
     const checkWgoLoaded = () => {
       if (typeof window !== 'undefined' && window.WGo) {
-        console.log('WGo.js loaded successfully')
-        console.log('WGo object:', window.WGo)
-        console.log('WGo.Board available:', !!window.WGo.Board)
-        console.log('WGo.Game available:', !!window.WGo.Game)
         setIsWgoLoaded(true)
       } else {
         retryCount++
-        console.log(`Waiting for WGo.js... (attempt ${retryCount}/${maxRetries})`)
 
         if (retryCount < maxRetries) {
           setTimeout(checkWgoLoaded, 100)
@@ -57,6 +52,10 @@ export default function GoBoard({
   // 結果表示用のクリックハンドラーを保存
   const resultClickHandlerRef = useRef<any>(null)
 
+  // 結果表示を更新する関数
+  const updateResultsDisplay = useRef<(results: any) => void>()
+
+  // 碁盤の初期化（resultsDataを依存配列から除外）
   useEffect(() => {
     if (!isWgoLoaded || !boardRef.current) return
 
@@ -70,11 +69,6 @@ export default function GoBoard({
         // コンテナのサイズを取得
         const containerRect = boardRef.current.getBoundingClientRect()
         const containerWidth = Math.min(containerRect.width || 360, 500)
-        console.log('Initializing board with width:', containerWidth)
-
-        // デバッグ情報を追加
-        console.log('WGo object:', window.WGo)
-        console.log('WGo.Board:', window.WGo?.Board)
 
         const newBoard = new window.WGo.Board(boardRef.current, {
           size: 19,
@@ -85,8 +79,6 @@ export default function GoBoard({
           background: '/wgo/wood1.jpg',
           section: { top: -0.5, bottom: -0.5, left: -0.5, right: -0.5 }, // 座標表示のため余白拡大
         })
-
-        console.log('Board created:', newBoard)
 
         // 座標表示用のカスタム描画ハンドラーを定義
         const coordinates = {
@@ -128,7 +120,6 @@ export default function GoBoard({
 
         // 座標表示ハンドラーを追加
         newBoard.addCustomObject(coordinates)
-        console.log('座標表示ハンドラーを追加しました')
 
         setBoard(newBoard)
 
@@ -217,12 +208,16 @@ export default function GoBoard({
             })
           }
 
-          // 結果表示ページでの得票数表示
+          // 結果表示を更新する関数を保存
+          updateResultsDisplay.current = (results: any) => {
+            if (results && Object.keys(results).length > 0) {
+              displayResults(newBoard, results)
+            }
+          }
+
+          // 初回のみ結果を表示
           if (resultsData && Object.keys(resultsData).length > 0) {
-            console.log('Calling displayResults with data:', resultsData)
             displayResults(newBoard, resultsData)
-          } else {
-            console.log('No results data to display')
           }
         }
       } catch (error) {
@@ -252,10 +247,21 @@ export default function GoBoard({
         }
       }
     }
-  }, [isWgoLoaded, sgfContent, showClickable, resultsData, maxMoves])
+  }, [isWgoLoaded, sgfContent, showClickable, maxMoves]) // resultsDataを除外
+
+  // resultsDataが変更されたときだけ結果表示を更新
+  useEffect(() => {
+    if (updateResultsDisplay.current && resultsData) {
+      updateResultsDisplay.current(resultsData)
+    }
+  }, [resultsData])
 
   // SGFをWGo.Gameに読み込み（公式Game API使用）
-  const loadSgfToGame = (game: any, sgfContent: string, maxMoves?: number): { x: number; y: number; color: number } | null => {
+  const loadSgfToGame = (
+    game: any,
+    sgfContent: string,
+    maxMoves?: number,
+  ): { x: number; y: number; color: number } | null => {
     try {
       // 簡易SGFパーサー（公式の詳細パーサーがあれば使用推奨）
       const moves = parseSgfMoves(sgfContent)
@@ -270,14 +276,14 @@ export default function GoBoard({
           if (Array.isArray(result)) {
             console.log(`Move ${index + 1}: captured ${result.length} stones`)
           }
-          
+
           // maxMovesで制限される最後の手を記録
           if (maxMoves === undefined || index === maxMoves - 1) {
             lastMove = move
           }
         }
       })
-      
+
       return lastMove
     } catch (error) {
       console.error('Failed to load SGF:', error)
@@ -286,7 +292,11 @@ export default function GoBoard({
   }
 
   // ポジションを盤面に反映（公式Position API使用）
-  const updateBoardPosition = (boardInstance: any, position: any, lastMove?: { x: number; y: number; color: number }) => {
+  const updateBoardPosition = (
+    boardInstance: any,
+    position: any,
+    lastMove?: { x: number; y: number; color: number },
+  ) => {
     boardInstance.removeAllObjects() // 既存オブジェクト削除
 
     for (let x = 0; x < position.size; x++) {
@@ -316,7 +326,7 @@ export default function GoBoard({
 
             // 石の色に応じて円の色を決定（白石には黒丸、黒石には白丸）
             const markerColor = lastMove.color === window.WGo.B ? '#FFFFFF' : '#000000'
-            
+
             // 円を描画
             ctx.beginPath()
             ctx.arc(xr, yr, sr * 0.5, 0, 2 * Math.PI, true)
@@ -335,40 +345,32 @@ export default function GoBoard({
     }
   }
 
+  // 結果表示用オブジェクトとポジションを保存
+  const resultObjectsRef = useRef<any[]>([])
+  const boardPositionRef = useRef<any>(null)
+
   // 結果表示機能（WGo.jsのaddObjectを使用）
   const displayResults = (
     boardInstance: any,
     results: Record<string, { votes: number; answers: any[] }>,
   ) => {
-    console.log('Displaying results:', results)
-    console.log('Results keys:', Object.keys(results))
-    console.log('Board instance:', boardInstance)
+    // 前回の結果表示オブジェクトを削除
+    resultObjectsRef.current.forEach((obj) => {
+      boardInstance.removeObject(obj)
+    })
+    resultObjectsRef.current = []
 
-    // まず、すべての結果マーカーを削除
-    boardInstance.removeAllObjects()
-
-    // 既存の石を再配置
-    const game = new window.WGo.Game()
-    loadSgfToGame(game, sgfContent, maxMoves)
-    const position = game.getPosition()
-
-    for (let x = 0; x < position.size; x++) {
-      for (let y = 0; y < position.size; y++) {
-        const stone = position.get(x, y)
-        if (stone !== 0) {
-          boardInstance.addObject({
-            x: x,
-            y: y,
-            c: stone,
-          })
-        }
-      }
+    // 初回のみポジションを保存
+    if (!boardPositionRef.current) {
+      const game = new window.WGo.Game()
+      loadSgfToGame(game, sgfContent, maxMoves)
+      boardPositionRef.current = game.getPosition()
     }
+    const position = boardPositionRef.current
 
     // 結果の数字を表示（docs/wgo.mdの推奨方法に従い、石とラベルを重ねて表示）
     Object.entries(results).forEach(([coordinate, data]) => {
       const coords = sgfToWgoCoords(coordinate)
-      console.log(`Converting coordinate ${coordinate} to WGo coords:`, coords)
 
       if (coords.x >= 0 && coords.x < 19 && coords.y >= 0 && coords.y < 19) {
         const stoneAtPosition = position.get(coords.x, coords.y)
@@ -403,21 +405,25 @@ export default function GoBoard({
             },
           }
 
-          boardInstance.addObject({
+          const obj = {
             x: coords.x,
             y: coords.y,
             type: voteCircleHandler,
             text: data.votes.toString(),
             bgColor: getColorByVotes(data.votes),
-          })
+          }
+          boardInstance.addObject(obj)
+          resultObjectsRef.current.push(obj)
         } else {
           // 石がある場合は、標準のラベルマーカーを使用
-          boardInstance.addObject({
+          const obj = {
             x: coords.x,
             y: coords.y,
             type: 'LB',
             text: data.votes.toString(),
-          })
+          }
+          boardInstance.addObject(obj)
+          resultObjectsRef.current.push(obj)
         }
       }
     })
@@ -430,11 +436,8 @@ export default function GoBoard({
     // 新しいクリックハンドラーを定義して保存
     resultClickHandlerRef.current = (x: number, y: number) => {
       const coordinate = wgoToSgfCoords(x, y)
-      console.log(`Click at (${x}, ${y}), SGF coord: ${coordinate}`)
-      console.log('Available results:', Object.keys(results))
 
       if (results[coordinate]) {
-        console.log('Found result for coordinate:', coordinate, results[coordinate])
         showAnswerDetails(coordinate, results[coordinate])
       } else {
         console.log('No result found for coordinate:', coordinate)
@@ -491,17 +494,11 @@ export default function GoBoard({
   // 回答詳細表示
   const showAnswerDetails = (coordinate: string, data: { votes: number; answers: any[] }) => {
     const displayCoord = sgfToDisplayCoordinate(coordinate)
-    console.log('showAnswerDetails called:', {
-      sgfCoord: coordinate,
-      displayCoord: displayCoord,
-      data: data,
-    })
 
     const event = new CustomEvent('showAnswerDetails', {
       detail: { coordinate: displayCoord, data },
     })
     window.dispatchEvent(event)
-    console.log('CustomEvent dispatched')
   }
 
   // SGF座標を標準囲碁記法（A1〜T19）に変換

@@ -39,8 +39,16 @@ export async function submitAnswer(answerData: {
   return responseData
 }
 
-export async function getResults(problemId: number) {
-  const response = await fetch(`/api/results/${problemId}`)
+export async function getResults(problemId: number, minRank?: number, maxRank?: number) {
+  const params = new URLSearchParams()
+  if (minRank !== undefined) params.append('minRank', minRank.toString())
+  if (maxRank !== undefined) params.append('maxRank', maxRank.toString())
+  
+  const url = params.toString() 
+    ? `/api/results/${problemId}?${params.toString()}`
+    : `/api/results/${problemId}`
+    
+  const response = await fetch(url)
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
     if (errorData.error) {
