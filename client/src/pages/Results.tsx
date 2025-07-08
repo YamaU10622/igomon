@@ -5,6 +5,7 @@ import GoBoard from '../components/GoBoard'
 import { ResultsDisplay } from '../components/ResultsDisplay'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
 import { getUserUuid } from '../utils/uuid'
+import { RANKS } from '../utils/rankUtils'
 
 export function Results() {
   const { problemId } = useParams<{ problemId: string }>()
@@ -13,6 +14,8 @@ export function Results() {
   const [results, setResults] = useState<Record<string, { votes: number; answers: any[] }>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [minRank, setMinRank] = useState(0)
+  const [maxRank, setMaxRank] = useState(RANKS.length - 1)
 
   useEffect(() => {
     if (!problemId) return
@@ -46,11 +49,8 @@ export function Results() {
       setLoading(true)
       const [problemData, resultsData] = await Promise.all([
         getProblem(problemId!),
-        getResults(parseInt(problemId!)),
+        getResults(parseInt(problemId!), minRank, maxRank),
       ])
-
-      console.log('Problem data:', problemData)
-      console.log('Results data:', resultsData)
 
       setProblem(problemData)
       setResults(resultsData)
@@ -60,6 +60,17 @@ export function Results() {
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (problem) {
+      loadData()
+    }
+  }, [minRank, maxRank])
+
+  const handleRangeChange = (min: number, max: number) => {
+    setMinRank(min)
+    setMaxRank(max)
   }
 
   if (loading) {
@@ -85,7 +96,7 @@ export function Results() {
       <div className="questionnaire-container">
         <div className="problem-header">
           <div className="problem-info-left">
-            <span className="problem-number">No.{problem.id} - 結果</span>
+            <span className="problem-number">No.{problem.id} - 結果ページ</span>
             <span className="turn-info">{problem.turn === 'black' ? '黒番' : '白番'}</span>
           </div>
         </div>
@@ -103,7 +114,14 @@ export function Results() {
           </div>
 
           <div className="form-wrapper">
-            <ResultsDisplay results={results} onDelete={loadData} />
+            <ResultsDisplay
+              results={results}
+              onDelete={loadData}
+              isFiltered={minRank !== 0 || maxRank !== RANKS.length - 1}
+              minRank={minRank}
+              maxRank={maxRank}
+              onRangeChange={handleRangeChange}
+            />
             <div className="back-to-top">
               <Link to="/">
                 <svg

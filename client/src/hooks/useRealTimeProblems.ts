@@ -21,7 +21,6 @@ export function useRealTimeProblems() {
     fetch('/api/problems')
       .then((res) => res.json())
       .then((data) => {
-        console.log('Fetched problems from API:', data)
         setProblems(data)
       })
       .catch((err) => console.error('Failed to fetch problems:', err))
@@ -34,31 +33,25 @@ export function useRealTimeProblems() {
 
     // 接続状態の管理
     newSocket.on('connect', () => {
-      console.log('Connected to server')
       setIsConnected(true)
     })
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from server')
       setIsConnected(false)
     })
 
     // 初期問題一覧受信
     newSocket.on('initialProblems', (initialProblems: Problem[]) => {
-      console.log('Received initial problems:', initialProblems)
       setProblems(initialProblems)
     })
 
     // 問題一覧更新受信
     newSocket.on('problemsListUpdated', (updatedProblems: Problem[]) => {
-      console.log('Problems list updated:', updatedProblems)
       setProblems(updatedProblems)
     })
 
     // 個別問題更新受信
     newSocket.on('problemUpdated', (data: { type: string; problem: Problem }) => {
-      console.log('Problem updated:', data)
-
       if (data.type === 'update') {
         setProblems((prev) => {
           const existingIndex = prev.findIndex((p) => p.id === data.problem.id)
