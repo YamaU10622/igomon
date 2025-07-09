@@ -22,7 +22,8 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value)
-    if (value <= maxRank) {
+    // 両方が九段の場合、下限は自由に動かせる
+    if (value <= maxRank || (minRank === maxRankIndex && maxRank === maxRankIndex)) {
       setMinRank(value)
       if (isDragging) {
         pendingChangeRef.current = { min: value, max: maxRank }
@@ -34,7 +35,8 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
 
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value)
-    if (value >= minRank) {
+    // 両方が20級の場合、上限は自由に動かせる
+    if (value >= minRank || (minRank === 0 && maxRank === 0)) {
       setMaxRank(value)
       if (isDragging) {
         pendingChangeRef.current = { min: minRank, max: value }
@@ -100,7 +102,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
           onChange={handleMinChange}
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
-          className="slider slider-min"
+          className={`slider slider-min ${minRank === maxRankIndex && maxRank === maxRankIndex ? 'slider-priority' : ''}`}
           aria-label="最小棋力"
         />
 
@@ -112,7 +114,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
           onChange={handleMaxChange}
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
-          className="slider slider-max"
+          className={`slider slider-max ${minRank === 0 && maxRank === 0 ? 'slider-priority' : ''}`}
           aria-label="最大棋力"
         />
       </div>

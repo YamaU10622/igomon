@@ -137,6 +137,19 @@
   outline-offset: 2px;
 }
 
+/* スライダーの優先順位制御 */
+.slider-min {
+  z-index: 1;
+}
+
+.slider-max {
+  z-index: 2;
+}
+
+.slider-priority {
+  z-index: 3 !important;
+}
+
 /* モバイル対応 */
 @media (max-width: 600px) {
   .range-slider-container {
