@@ -186,6 +186,9 @@ export default function GoBoard({
             }
 
             newBoard.addEventListener('click', (x: number, y: number) => {
+	      // 着手禁止点、盤外の点などは無視
+	      if(!game.isValid(x, y)) return
+
               // 公式座標システム（相対座標）
               const coordinate = wgoToSgfCoords(x, y)
               onCoordinateSelect(coordinate)
