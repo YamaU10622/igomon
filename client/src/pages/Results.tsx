@@ -12,6 +12,9 @@ export function Results() {
   const navigate = useNavigate()
   const [problem, setProblem] = useState<any>(null)
   const [results, setResults] = useState<Record<string, { votes: number; answers: any[] }>>({})
+  const [allResults, setAllResults] = useState<Record<string, { votes: number; answers: any[] }>>(
+    {},
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [minRank, setMinRank] = useState(0)
@@ -26,8 +29,7 @@ export function Results() {
   const checkAnswerStatus = async () => {
     try {
       // ユーザーが回答済みかチェック
-      const userUuid = getUserUuid()
-      const answered = await hasUserAnswered(parseInt(problemId!), userUuid)
+      const answered = await hasUserAnswered(parseInt(problemId!))
 
       if (!answered) {
         // 未回答の場合は回答ページへリダイレクト
@@ -49,11 +51,13 @@ export function Results() {
       setLoading(true)
       const [problemData, resultsData] = await Promise.all([
         getProblem(problemId!),
-        getResults(parseInt(problemId!), minRank, maxRank),
+        getResults(parseInt(problemId!)), // 全ての回答を取得
       ])
 
       setProblem(problemData)
-      setResults(resultsData)
+      setAllResults(resultsData) // 全データを保存
+
+      filterResults(resultsData, minRank, maxRank) // 初回フィルタリング
     } catch (err) {
       setError('データの読み込みに失敗しました')
       console.error(err)
@@ -62,11 +66,37 @@ export function Results() {
     }
   }
 
+  // フロントエンドでのフィルタリング関数
+  const filterResults = (
+    data: Record<string, { votes: number; answers: any[] }>,
+    min: number,
+    max: number,
+  ) => {
+    const filteredResults: Record<string, { votes: number; answers: any[] }> = {}
+
+    Object.entries(data).forEach(([key, value]) => {
+      const filteredAnswers = value.answers.filter((answer) => {
+        // answer.playerRankを使用（データ構造に合わせて修正）
+        const rankIndex = RANKS.indexOf(answer.playerRank)
+        return rankIndex >= min && rankIndex <= max
+      })
+
+      if (filteredAnswers.length > 0) {
+        filteredResults[key] = {
+          votes: filteredAnswers.length,
+          answers: filteredAnswers,
+        }
+      }
+    })
+
+    setResults(filteredResults)
+  }
+
   useEffect(() => {
-    if (problem) {
-      loadData()
+    if (allResults && Object.keys(allResults).length > 0) {
+      filterResults(allResults, minRank, maxRank)
     }
-  }, [minRank, maxRank])
+  }, [minRank, maxRank, allResults])
 
   const handleRangeChange = (min: number, max: number) => {
     setMinRank(min)
