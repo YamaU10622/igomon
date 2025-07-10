@@ -500,10 +500,11 @@ export default function GoBoard({
     return '#57a4ff' // 青色（1-4票）
   }
 
-  // 回答詳細表示
+  // 回答詳細表示（フィルタリングされた回答のみを送信）
   const showAnswerDetails = (coordinate: string, data: { votes: number; answers: any[] }) => {
     const displayCoord = sgfToDisplayCoordinate(coordinate)
 
+    // フィルタリングされた回答データをそのまま送信
     const event = new CustomEvent('showAnswerDetails', {
       detail: { coordinate: displayCoord, data },
     })

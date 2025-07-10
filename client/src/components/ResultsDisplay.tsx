@@ -33,17 +33,37 @@ export function ResultsDisplay({
   onRangeChange,
 }: ResultsDisplayProps) {
   const [selectedCoordinate, setSelectedCoordinate] = useState<string | null>(null)
-  const [selectedAnswers, setSelectedAnswers] = useState<Answer[]>([])
+  const [selectedSgfCoordinate, setSelectedSgfCoordinate] = useState<string | null>(null)
   const userUuid = getUserUuid()
   const navigate = useNavigate()
   const { problemId } = useParams<{ problemId: string }>()
+
+  // 表示座標からSGF座標に変換する関数
+  const displayToSgfCoordinate = (displayCoord: string): string => {
+    if (!displayCoord || displayCoord.length < 2) return ''
+    
+    const letter = displayCoord[0]
+    const number = parseInt(displayCoord.substring(1))
+    
+    // 文字をインデックスに変換（I抜き）
+    const letters = 'ABCDEFGHJKLMNOPQRST'
+    const x = letters.indexOf(letter)
+    if (x === -1) return ''
+    
+    // 数字をSGF座標に変換（19から引く）
+    const y = 19 - number
+    
+    return String.fromCharCode('a'.charCodeAt(0) + x) + String.fromCharCode('a'.charCodeAt(0) + y)
+  }
 
   useEffect(() => {
     // 碁盤からの詳細表示イベントをリッスン
     const handleShowDetails = (event: CustomEvent) => {
       const { coordinate, data } = event.detail
       setSelectedCoordinate(coordinate)
-      setSelectedAnswers(data.answers)
+      // SGF座標も保存
+      const sgfCoord = displayToSgfCoordinate(coordinate)
+      setSelectedSgfCoordinate(sgfCoord)
     }
 
     window.addEventListener('showAnswerDetails', handleShowDetails as EventListener)
@@ -68,6 +88,11 @@ export function ResultsDisplay({
 
   // 総回答数を計算
   const totalVotes = Object.values(results).reduce((sum, { votes }) => sum + votes, 0)
+
+  // 選択中の座標の回答を取得（フィルタリング後のデータから自動的に取得）
+  const selectedAnswers = selectedSgfCoordinate && results[selectedSgfCoordinate] 
+    ? results[selectedSgfCoordinate].answers 
+    : []
 
   return (
     <div className="results-display">
