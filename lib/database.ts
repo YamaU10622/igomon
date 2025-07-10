@@ -1,6 +1,5 @@
 // lib/database.ts
 import { PrismaClient } from '@prisma/client'
-import { isRankInRange, normalizeRank } from './rankUtils'
 
 const prisma = new PrismaClient()
 

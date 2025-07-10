@@ -134,6 +134,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
               <option value="七段">七段</option>
               <option value="八段">八段</option>
               <option value="九段">九段</option>
+              <option value="プロ">プロ</option>
             </select>
             {errors.playerRank && <span className="error-message">{errors.playerRank}</span>}
           </div>

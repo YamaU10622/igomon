@@ -20,7 +20,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value)
-    // 両方が九段の場合、下限は自由に動かせる
+    // 両方がプロの場合、下限は自由に動かせる
     if (value <= maxRank || (minRank === maxRankIndex && maxRank === maxRankIndex)) {
       setMinRank(value)
       // 常にリアルタイムで更新
@@ -37,8 +37,6 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
       onRangeChange(minRank, value)
     }
   }
-
-
 
   return (
     <div className="range-slider-container">
