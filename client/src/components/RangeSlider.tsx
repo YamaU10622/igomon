@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { RANKS, numberToRank } from '../utils/rankUtils'
 import '../styles/RangeSlider.css'
 
@@ -11,9 +11,7 @@ interface RangeSliderProps {
 export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, onRangeChange }) => {
   const [minRank, setMinRank] = useState(minValue)
   const [maxRank, setMaxRank] = useState(maxValue)
-  const [isDragging, setIsDragging] = useState(false)
   const maxRankIndex = RANKS.length - 1
-  const pendingChangeRef = useRef<{ min: number; max: number } | null>(null)
 
   useEffect(() => {
     setMinRank(minValue)
@@ -22,55 +20,24 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value)
-    if (value <= maxRank) {
+    // 両方が九段の場合、下限は自由に動かせる
+    if (value <= maxRank || (minRank === maxRankIndex && maxRank === maxRankIndex)) {
       setMinRank(value)
-      if (isDragging) {
-        pendingChangeRef.current = { min: value, max: maxRank }
-      } else {
-        onRangeChange(value, maxRank)
-      }
+      // 常にリアルタイムで更新
+      onRangeChange(value, maxRank)
     }
   }
 
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value)
-    if (value >= minRank) {
+    // 両方が20級の場合、上限は自由に動かせる
+    if (value >= minRank || (minRank === 0 && maxRank === 0)) {
       setMaxRank(value)
-      if (isDragging) {
-        pendingChangeRef.current = { min: minRank, max: value }
-      } else {
-        onRangeChange(minRank, value)
-      }
+      // 常にリアルタイムで更新
+      onRangeChange(minRank, value)
     }
   }
 
-  const handleMouseDown = () => {
-    setIsDragging(true)
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-    if (pendingChangeRef.current) {
-      onRangeChange(pendingChangeRef.current.min, pendingChangeRef.current.max)
-      pendingChangeRef.current = null
-    }
-  }
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      if (isDragging) {
-        handleMouseUp()
-      }
-    }
-
-    document.addEventListener('mouseup', handleGlobalMouseUp)
-    document.addEventListener('touchend', handleGlobalMouseUp)
-
-    return () => {
-      document.removeEventListener('mouseup', handleGlobalMouseUp)
-      document.removeEventListener('touchend', handleGlobalMouseUp)
-    }
-  }, [isDragging])
 
 
   return (
@@ -98,9 +65,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
           max={maxRankIndex}
           value={minRank}
           onChange={handleMinChange}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleMouseDown}
-          className="slider slider-min"
+          className={`slider slider-min ${minRank === maxRankIndex && maxRank === maxRankIndex ? 'slider-priority' : ''}`}
           aria-label="最小棋力"
         />
 
@@ -110,9 +75,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({ minValue, maxValue, on
           max={maxRankIndex}
           value={maxRank}
           onChange={handleMaxChange}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleMouseDown}
-          className="slider slider-max"
+          className={`slider slider-max ${minRank === 0 && maxRank === 0 ? 'slider-priority' : ''}`}
           aria-label="最大棋力"
         />
       </div>

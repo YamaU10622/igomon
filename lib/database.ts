@@ -29,7 +29,7 @@ export async function saveAnswer(answerData: {
 }
 
 // 結果の取得
-export async function getResults(problemId: number, minRank?: number, maxRank?: number) {
+export async function getResults(problemId: number) {
   const answers = await prisma.answer.findMany({
     where: {
       problemId: problemId,
@@ -38,14 +38,9 @@ export async function getResults(problemId: number, minRank?: number, maxRank?: 
     orderBy: { createdAt: 'asc' },
   })
 
-  // 棋力フィルターが指定されている場合、フィルタリング
-  const filteredAnswers = (minRank !== undefined && maxRank !== undefined)
-    ? answers.filter(answer => isRankInRange(answer.playerRank, minRank, maxRank))
-    : answers
-
   // 座標ごとの集計
   const results: Record<string, { votes: number; answers: any[] }> = {}
-  filteredAnswers.forEach((answer) => {
+  answers.forEach((answer) => {
     if (!results[answer.coordinate]) {
       results[answer.coordinate] = { votes: 0, answers: [] }
     }
