@@ -186,8 +186,8 @@ export default function GoBoard({
             }
 
             newBoard.addEventListener('click', (x: number, y: number) => {
-	      // 着手禁止点、盤外の点などは無視
-	      if(!game.isValid(x, y)) return
+              // 着手禁止点、盤外の点などは無視
+              if (!game.isValid(x, y)) return
 
               // 公式座標システム（相対座標）
               const coordinate = wgoToSgfCoords(x, y)
@@ -213,9 +213,7 @@ export default function GoBoard({
 
           // 結果表示を更新する関数を保存
           updateResultsDisplay.current = (results: any) => {
-            if (results && Object.keys(results).length > 0) {
-              displayResults(newBoard, results)
-            }
+            displayResults(newBoard, results)
           }
 
           // 初回のみ結果を表示
@@ -254,7 +252,7 @@ export default function GoBoard({
 
   // resultsDataが変更されたときだけ結果表示を更新
   useEffect(() => {
-    if (updateResultsDisplay.current && resultsData) {
+    if (updateResultsDisplay.current) {
       updateResultsDisplay.current(resultsData)
     }
   }, [resultsData])
@@ -276,9 +274,6 @@ export default function GoBoard({
         if (move.color && move.x !== undefined && move.y !== undefined) {
           // 公式play()メソッド使用
           const result = game.play(move.x, move.y, move.color)
-          if (Array.isArray(result)) {
-            console.log(`Move ${index + 1}: captured ${result.length} stones`)
-          }
 
           // maxMovesで制限される最後の手を記録
           if (maxMoves === undefined || index === maxMoves - 1) {
@@ -355,21 +350,32 @@ export default function GoBoard({
   // 結果表示機能（WGo.jsのaddObjectを使用）
   const displayResults = (
     boardInstance: any,
-    results: Record<string, { votes: number; answers: any[] }>,
+    results: Record<string, { votes: number; answers: any[] }> | undefined,
   ) => {
     // 前回の結果表示オブジェクトを削除
-    resultObjectsRef.current.forEach((obj) => {
-      boardInstance.removeObject(obj)
-    })
+    // removeObjectが正しく動作しない場合があるため、
+    // すべてのオブジェクトを削除してから再配置する
+    boardInstance.removeAllObjects()
     resultObjectsRef.current = []
 
     // 初回のみポジションを保存
     if (!boardPositionRef.current) {
       const game = new window.WGo.Game()
-      loadSgfToGame(game, sgfContent, maxMoves)
-      boardPositionRef.current = game.getPosition()
+      const lastMove = loadSgfToGame(game, sgfContent, maxMoves)
+      boardPositionRef.current = {
+        position: game.getPosition(),
+        lastMove: lastMove,
+      }
     }
-    const position = boardPositionRef.current
+    const position = boardPositionRef.current.position
+    const lastMove = boardPositionRef.current.lastMove
+
+    // 既存の石を再配置
+    updateBoardPosition(boardInstance, position, lastMove || undefined)
+
+    if (results == null) {
+      return
+    }
 
     // 結果の数字を表示（docs/wgo.mdの推奨方法に従い、石とラベルを重ねて表示）
     Object.entries(results).forEach(([coordinate, data]) => {

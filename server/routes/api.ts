@@ -50,10 +50,8 @@ router.post('/answers', async (req: Request, res: Response) => {
 router.get('/results/:problemId', async (req: Request, res: Response) => {
   try {
     const problemId = parseInt(req.params.problemId)
-    const minRank = req.query.minRank ? parseInt(req.query.minRank as string) : undefined
-    const maxRank = req.query.maxRank ? parseInt(req.query.maxRank as string) : undefined
-    
-    const results = await getResults(problemId, minRank, maxRank)
+    const results = await getResults(problemId)
+
     res.json(results)
   } catch (error) {
     console.error('Error getting results:', error)
