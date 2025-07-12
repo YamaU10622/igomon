@@ -87,8 +87,8 @@ function parseDescriptionFile(content: string): ParsedProblemData {
 
 function getNextTurn(sgfString: string): string {
   // メインのゲーム木のみ利用
-  const sgfBranches = sgfString.split(")")
-  const sgfElements = sgfBranches[0].split(";")
+  const sgfMainBranch = extractMainRoute(sgfString)
+  const sgfElements = sgfMainBranch[0].split(";")
   
   // 最終手を取得
   const sgfLastElements = sgfElements[sgfElements.length - 1]
@@ -101,4 +101,38 @@ function getNextTurn(sgfString: string): string {
   
   // 上記の正規表現マッチに失敗したときは黒番で返す
   else return "black"
+}
+
+// SGFからメインルートを取得
+// コメント内の `)` は無視し、分岐を生成する `)` 以前を取得する
+function extractMainRoute(sgfContent: string): string {
+  let inValue = false   // '[' ～ ']' 内に居るか
+  let escape  = false   // 直前が '\' かどうか
+  let result  = ''
+
+  for (const ch of sgfContent) {
+    if (inValue) { // [ ] プロパティの内部
+      result += ch
+      if (escape) {
+        escape = false
+      }
+      else if (ch === '\\') escape = true   // 次の 1 文字をエスケープ
+      else if (ch === ']')  inValue = false // プロパティ終了
+      continue
+    }
+
+    // プロパティ値の外
+    if (ch === '[') {
+      inValue = true
+      result += ch
+      continue
+    }
+
+    if (ch === ')') {
+      // これ以降は分岐なので捨てる
+      break
+    }
+    result += ch
+  }
+  return result
 }
