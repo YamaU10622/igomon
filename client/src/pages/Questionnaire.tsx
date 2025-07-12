@@ -62,6 +62,7 @@ export function Questionnaire() {
 
     try {
       setIsSubmitting(true)
+      setError('') // エラーをクリア
       const result = await submitAnswer({
         problemId: problem.id,
         ...formData,

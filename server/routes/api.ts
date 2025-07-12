@@ -1,23 +1,42 @@
 // server/routes/api.ts
-import express, { Request, Response, Router } from 'express'
-import {
-  saveAnswer,
-  getResults,
-  deleteAnswer,
-  getProblems,
-  getProblem,
-  hasUserAnswered,
-} from '../../lib/database'
+import express, { Request, Response } from 'express'
+import crypto from 'crypto'
+import { saveAnswer, getResults, deleteAnswer, hasUserAnswered } from '../../lib/database'
 import { loadProblemFromDirectory } from '../utils/problem-loader'
 import { createProblem } from '../../src/app/api/problems/create/route'
 import prisma from '../../lib/database'
+import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth'
 
 const router = express.Router() as any
 
-// 回答投稿
-router.post('/answers', async (req: Request, res: Response) => {
+// 認証エンドポイント
+router.post('/auth/register', async (req: Request, res: Response) => {
   try {
-    const { problemId, userUuid, coordinate, reason, playerName, playerRank } = req.body
+    const userUuid = crypto.randomUUID()
+    const authToken = crypto.randomBytes(32).toString('hex')
+
+    const user = await prisma.user.create({
+      data: {
+        uuid: userUuid,
+        authToken: authToken,
+      },
+    })
+
+    res.json({
+      authToken: authToken,
+      message: 'ユーザー登録が完了しました',
+    })
+  } catch (error) {
+    console.error('ユーザー登録エラー:', error)
+    res.status(500).json({ error: 'ユーザー登録に失敗しました' })
+  }
+})
+
+// 回答投稿（認証必須）
+router.post('/answers', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { problemId, coordinate, reason, playerName, playerRank } = req.body
+    const userUuid = req.user!.uuid // 認証ミドルウェアで設定されたユーザー情報から取得
 
     // 既に回答済みかチェック
     const alreadyAnswered = await hasUserAnswered(problemId, userUuid)
@@ -46,24 +65,48 @@ router.post('/answers', async (req: Request, res: Response) => {
   }
 })
 
-// 結果取得
-router.get('/results/:problemId', async (req: Request, res: Response) => {
-  try {
-    const problemId = parseInt(req.params.problemId)
-    const results = await getResults(problemId)
+// 結果取得（認証は任意）
+router.get(
+  '/results/:problemId',
+  optionalAuthenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const problemId = parseInt(req.params.problemId)
+      const results = await getResults(problemId)
+      const currentUserUuid = req.user?.uuid // 認証済みの場合のみ存在
 
-    res.json(results)
-  } catch (error) {
-    console.error('Error getting results:', error)
-    res.status(500).json({ error: 'Failed to get results' })
-  }
-})
+      // userUuidを隠蔽し、canDeleteフラグを追加
+      const sanitizedResults = Object.entries(results).reduce((acc, [coord, data]) => {
+        acc[coord] = {
+          votes: data.votes,
+          answers: data.answers.map((answer) => ({
+            id: answer.id,
+            coordinate: answer.coordinate,
+            reason: answer.reason,
+            playerName: answer.playerName,
+            playerRank: answer.playerRank,
+            createdAt: answer.createdAt,
+            updatedAt: answer.updatedAt,
+            // userUuidは返さない
+            canDelete: currentUserUuid ? answer.userUuid === currentUserUuid : false,
+          })),
+        }
+        return acc
+      }, {} as any)
 
-// 回答削除
-router.delete('/answers/:answerId', async (req: Request, res: Response) => {
+      res.json(sanitizedResults)
+    } catch (error) {
+      console.error('Error getting results:', error)
+      res.status(500).json({ error: 'Failed to get results' })
+    }
+  },
+)
+
+// 回答削除（認証必須）
+router.delete('/answers/:answerId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const answerId = parseInt(req.params.answerId)
-    const { userUuid } = req.body
+    const userUuid = req.user!.uuid // 認証ミドルウェアで設定されたユーザー情報から取得
 
     const success = await deleteAnswer(answerId, userUuid)
 
@@ -148,23 +191,23 @@ router.get('/sgf/:problemId', (req: Request, res: Response) => {
   }
 })
 
-// ユーザーが問題に回答済みかチェック
-router.get('/problems/:problemId/answered', async (req: Request, res: Response) => {
-  try {
-    const problemId = parseInt(req.params.problemId)
-    const userUuid = req.query.userUuid as string
+// ユーザーが問題に回答済みかチェック（認証必須）
+router.get(
+  '/problems/:problemId/answered',
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const problemId = parseInt(req.params.problemId)
+      const userUuid = req.user!.uuid // 認証ミドルウェアで設定されたユーザー情報から取得
 
-    if (!userUuid) {
-      return res.status(400).json({ error: 'User UUID is required' })
+      const answered = await hasUserAnswered(problemId, userUuid)
+      res.json({ answered })
+    } catch (error) {
+      console.error('Error checking if user answered:', error)
+      res.status(500).json({ error: 'Failed to check answer status' })
     }
-
-    const answered = await hasUserAnswered(problemId, userUuid)
-    res.json({ answered })
-  } catch (error) {
-    console.error('Error checking if user answered:', error)
-    res.status(500).json({ error: 'Failed to check answer status' })
-  }
-})
+  },
+)
 
 // 問題作成
 router.post('/problems', createProblem)

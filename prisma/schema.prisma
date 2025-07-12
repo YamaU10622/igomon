@@ -22,6 +22,16 @@ model Problem {
   @@map("problems")
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique
+  authToken String   @unique @map("auth_token")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
 model Answer {
   id          Int      @id @default(autoincrement())
   problemId   Int      @map("problem_id")
