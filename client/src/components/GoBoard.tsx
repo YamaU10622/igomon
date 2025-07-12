@@ -462,10 +462,12 @@ export default function GoBoard({
     const moves: Array<{ color: number; x: number; y: number }> = []
 
     // SGFから手順を順番通りに抽出（黒番Bと白番Wを交互に）
+    // メインのゲーム木を取得し、手順の再現はメインのルートに絞る
+    const sgfMainBranch = sgfContent.split(')')[0]
     const movePattern = /;([BW])\[([a-s][a-s])\]/g
     let match
 
-    while ((match = movePattern.exec(sgfContent)) !== null) {
+    while ((match = movePattern.exec(sgfMainBranch)) !== null) {
       const color = match[1] === 'B' ? window.WGo.B : window.WGo.W
       const coords = match[2]
 
