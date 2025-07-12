@@ -463,7 +463,7 @@ export default function GoBoard({
 
     // SGFから手順を順番通りに抽出（黒番Bと白番Wを交互に）
     // メインのゲーム木を取得し、手順の再現はメインのルートに絞る
-    const sgfMainBranch = sgfContent.split(')')[0]
+    const sgfMainBranch = extractMainRoute(sgfContent)
     const movePattern = /;([BW])\[([a-s][a-s])\]/g
     let match
 
@@ -479,6 +479,40 @@ export default function GoBoard({
     }
 
     return moves
+  }
+
+  // SGFからメインルートを取得
+  // コメント内の `)` は無視し、分岐を生成する `)` 以前を取得する
+  const extractMainRoute = (sgfContent: string): string => {
+    let inValue = false   // '[' ～ ']' 内に居るか
+    let escape  = false   // 直前が '\' かどうか
+    let result  = ''
+
+    for (const ch of sgfContent) {
+      if (inValue) { // [ ] プロパティの内部
+	result += ch
+	if (escape) {
+          escape = false
+	}
+	else if (ch === '\\') escape = true   // 次の 1 文字をエスケープ
+	else if (ch === ']')  inValue = false // プロパティ終了
+	continue
+      }
+
+      // プロパティ値の外
+      if (ch === '[') {
+	inValue = true
+	result += ch
+	continue
+      }
+
+      if (ch === ')') {
+	// これ以降は分岐なので捨てる
+	break
+      }
+      result += ch
+    }
+    return result
   }
 
   // 座標変換（公式座標システム準拠）
