@@ -2,17 +2,16 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
-import { getUserUuid } from '../utils/uuid'
 import { RangeSlider } from './RangeSlider'
 
 interface Answer {
   id: number
-  userUuid: string
   coordinate: string
   reason: string
   playerName: string
   playerRank: string
   createdAt: string
+  canDelete?: boolean
 }
 
 interface ResultsDisplayProps {
@@ -34,7 +33,6 @@ export function ResultsDisplay({
 }: ResultsDisplayProps) {
   const [selectedCoordinate, setSelectedCoordinate] = useState<string | null>(null)
   const [selectedSgfCoordinate, setSelectedSgfCoordinate] = useState<string | null>(null)
-  const userUuid = getUserUuid()
   const navigate = useNavigate()
   const { problemId } = useParams<{ problemId: string }>()
 
@@ -116,7 +114,7 @@ export function ResultsDisplay({
                     <span className="player-rank">段位：{answer.playerRank}</span>
                   </div>
                   <div className="answer-actions">
-                    {answer.userUuid === userUuid && (
+                    {answer.canDelete && (
                       <button className="delete-button" onClick={() => handleDelete(answer.id)}>
                         削除
                       </button>
