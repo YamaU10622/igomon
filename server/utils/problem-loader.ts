@@ -27,11 +27,27 @@ export function loadProblemFromDirectory(problemId: string): ProblemData | null 
     const sgfContent = fs.readFileSync(sgfPath, 'utf-8')
 
     // description.txt のパース
-    const problemData = parseDescriptionFile(descriptionContent)
+    const parsedProblemData = parseDescriptionFile(descriptionContent)
+
+    // 手番を推定
+    // description.txt に手番の記載があればそれを優先する。
+    // 記載がなければ moves の偶奇で手番を推定し、
+    // moves もない場合は最終手をsgfファイルから推定する。
+    let turn = parsedProblemData.turn
+    if (!turn) {
+      if (parsedProblemData.moves !== undefined) {
+	turn = parsedProblemData.moves % 2 === 1 ? 'white' : 'black'
+      }
+      else {
+	turn = getNextTurn(sgfContent)
+      }
+    }
 
     return {
       id: parseInt(problemId),
-      ...problemData,
+      turn,
+      description: parsedProblemData.description,
+      moves: parsedProblemData.moves,
       sgfContent,
     }
   } catch (error) {
@@ -40,7 +56,13 @@ export function loadProblemFromDirectory(problemId: string): ProblemData | null 
   }
 }
 
-function parseDescriptionFile(content: string): Omit<ProblemData, 'sgfContent' | 'id'> {
+interface ParsedProblemData {
+  turn?: string
+  description: string
+  moves?: number
+}
+
+function parseDescriptionFile(content: string): ParsedProblemData {
   const lines = content.trim().split('\n')
   const data: any = {}
 
@@ -52,7 +74,7 @@ function parseDescriptionFile(content: string): Omit<ProblemData, 'sgfContent' |
   })
 
   // 必須項目のチェック（新フォーマット）
-  if (!data.turn || !data.description) {
+  if (!data.description) {
     throw new Error('必須項目が不足しています: turn, description')
   }
 
@@ -61,4 +83,22 @@ function parseDescriptionFile(content: string): Omit<ProblemData, 'sgfContent' |
     description: data.description,
     moves: data.moves ? parseInt(data.moves) : undefined,
   }
+}
+
+function getNextTurn(sgfString: string): string {
+  // メインのゲーム木のみ利用
+  const sgfBranches = sgfString.split(")")
+  const sgfElements = sgfBranches[0].split(";")
+  
+  // 最終手を取得
+  const sgfLastElements = sgfElements[sgfElements.length - 1]
+
+  // W[..] であって AW[..] でないものとの正規表現マッチ
+  const regexWhite = /(?<!A)W\[[a-s]{2}\]/;
+  const regexBlack = /(?<!A)B\[[a-s]{2}\]/;
+  if (regexWhite.test(sgfLastElements)) return "black"
+  else if (regexBlack.test(sgfLastElements)) return "white"
+  
+  // 上記の正規表現マッチに失敗したときは黒番で返す
+  else return "black"
 }

@@ -74,7 +74,7 @@ moves: 30
 description: 次の一手を考えてください。着手とその理由を回答してください。
 ```
 
-- **turn**: 手番（black または white）（必須）
+- **turn**: 手番（black または white）（任意）
 - **moves**: 表示する手数（任意、省略時は最終手まで）
 - **description**: 問題の説明文（必須）
 
