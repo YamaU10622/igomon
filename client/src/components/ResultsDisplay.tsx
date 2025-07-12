@@ -1,5 +1,5 @@
 // client/src/components/ResultsDisplay.tsx
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
 import { RangeSlider } from './RangeSlider'
@@ -39,18 +39,18 @@ export function ResultsDisplay({
   // 表示座標からSGF座標に変換する関数
   const displayToSgfCoordinate = (displayCoord: string): string => {
     if (!displayCoord || displayCoord.length < 2) return ''
-    
+
     const letter = displayCoord[0]
     const number = parseInt(displayCoord.substring(1))
-    
+
     // 文字をインデックスに変換（I抜き）
     const letters = 'ABCDEFGHJKLMNOPQRST'
     const x = letters.indexOf(letter)
     if (x === -1) return ''
-    
+
     // 数字をSGF座標に変換（19から引く）
     const y = 19 - number
-    
+
     return String.fromCharCode('a'.charCodeAt(0) + x) + String.fromCharCode('a'.charCodeAt(0) + y)
   }
 
@@ -88,9 +88,10 @@ export function ResultsDisplay({
   const totalVotes = Object.values(results).reduce((sum, { votes }) => sum + votes, 0)
 
   // 選択中の座標の回答を取得（フィルタリング後のデータから自動的に取得）
-  const selectedAnswers = selectedSgfCoordinate && results[selectedSgfCoordinate] 
-    ? results[selectedSgfCoordinate].answers 
-    : []
+  const selectedAnswers =
+    selectedSgfCoordinate && results[selectedSgfCoordinate]
+      ? results[selectedSgfCoordinate].answers
+      : []
 
   return (
     <div className="results-display">

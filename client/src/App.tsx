@@ -1,10 +1,10 @@
 // client/src/App.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Home } from './pages/Home'
 import { Questionnaire } from './pages/Questionnaire'
 import { Results } from './pages/Results'
-import { ensureAuthenticated, clearAuthToken } from './utils/auth'
+import { ensureAuthenticated } from './utils/auth'
 import './App.css'
 
 function App() {
