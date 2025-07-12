@@ -9,12 +9,13 @@ interface CreateProblemRequest {
   moves: number
   description: string
   sgfContent: string
+  deadline?: string
 }
 
 export async function createProblem(req: Request, res: Response) {
   try {
     const body: CreateProblemRequest = req.body
-    const { id, turn, moves, description, sgfContent } = body
+    const { id, turn, moves, description, sgfContent, deadline } = body
 
     // 問題ディレクトリを作成
     const problemDir = path.join(process.cwd(), 'public', 'problems', id.toString())
@@ -25,9 +26,14 @@ export async function createProblem(req: Request, res: Response) {
     await fs.writeFile(sgfPath, sgfContent)
 
     // description.txtを保存（新フォーマット: idとcreatedを除外）
-    const descriptionContent = `turn: ${turn}
+    let descriptionContent = `turn: ${turn}
 moves: ${moves}
 description: ${description}`
+    
+    if (deadline) {
+      descriptionContent += `
+deadline: ${deadline}`
+    }
 
     const descriptionPath = path.join(problemDir, 'description.txt')
     await fs.writeFile(descriptionPath, descriptionContent)
@@ -39,6 +45,7 @@ description: ${description}`
         sgfFilePath: `/problems/${id}/kifu.sgf`,
         description,
         turn,
+        deadline: deadline ? new Date(deadline) : undefined,
       },
     })
 

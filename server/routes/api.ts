@@ -166,7 +166,19 @@ router.get('/problems/:problemId', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Problem not found' })
     }
 
-    res.json(problem)
+    // データベースからdeadline情報を取得
+    const dbProblem = await prisma.problem.findUnique({
+      where: { id: parseInt(problemId) },
+      select: { deadline: true }
+    })
+
+    // deadlineをレスポンスに含める
+    const responseData = {
+      ...problem,
+      deadline: dbProblem?.deadline || null
+    }
+
+    res.json(responseData)
   } catch (error) {
     console.error('Error getting problem:', error)
     res.status(500).json({ error: 'Failed to get problem' })

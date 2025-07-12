@@ -121,6 +121,7 @@ export class ProblemWatcher {
               sgfFilePath: `/problems/${problemData.id}/kifu.sgf`,
               description: problemData.description,
               turn: problemData.turn as 'black' | 'white',
+              deadline: problemData.deadline,
             },
           })
           console.log(`Problem ${problemId} registered in database`)
