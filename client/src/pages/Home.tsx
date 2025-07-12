@@ -8,6 +8,7 @@ import { hasUserAnswered } from '../utils/api'
 export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
   const [answeredProblems, setAnsweredProblems] = useState<Set<number>>(new Set())
+  const [answeredMap, setAnsweredMap] = useState<{ [problemId: number]: boolean }>({})
 
   // 日付をフォーマット（YYYY.MM.DD形式）
   const formatDate = (dateString: string) => {
@@ -17,6 +18,30 @@ export function Home() {
     const day = String(date.getDate()).padStart(2, '0')
     return `${year}.${month}.${day}`
   }
+
+  // ユーザーが回答済みかどうかを問題ごとにチェック
+  useEffect( () => {
+      const checkHasUserAnswered = async() =>  {
+
+        const results = await Promise.all(
+          problems.map(async (problem) => {
+            const hasAnswered = await hasUserAnswered(problem.id)
+            return { id: problem.id, hasAnswered }
+          })
+        )
+
+        const answeredMap: { [id: number]: boolean } = {}
+
+        results.forEach(({id, hasAnswered}) => {
+          answeredMap[id] = hasAnswered
+      })
+        setAnsweredMap(answeredMap)
+      };
+
+      if (problems.length > 0) {
+        checkHasUserAnswered()
+      }
+    },[problems] )
 
   return (
     <div className="home-page">
@@ -58,6 +83,12 @@ export function Home() {
                     <div className="problem-details">
                       <span className="problem-turn">
                         {problem.turn === 'black' ? '黒番' : '白番'}　解答
+                      </span>
+                      <span className="problem-hasUserAnswered">
+                        {answeredMap[problem.id] ? (
+                        <span className = "already-answered">回答済み</span>
+                        ) : (<span className = "notyet-answered">未回答</span>
+                        )}
                       </span>
                       <span className="problem-date">
                         ◎ {formatDate(problem.createdAt || problem.createdDate || '')}
