@@ -8,6 +8,7 @@ interface ProblemData {
   description: string
   sgfContent: string
   moves?: number
+  deadline?: Date
 }
 
 export function loadProblemFromDirectory(problemId: string): ProblemData | null {
@@ -82,6 +83,7 @@ function parseDescriptionFile(content: string): ParsedProblemData {
     turn: data.turn,
     description: data.description,
     moves: data.moves ? parseInt(data.moves) : undefined,
+    deadline: data.deadline ? new Date(data.deadline) : undefined,
   }
 }
 
