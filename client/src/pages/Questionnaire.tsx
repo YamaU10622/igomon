@@ -43,12 +43,12 @@ export function Questionnaire() {
       setLoading(true)
       const problemData = await getProblem(problemId!)
       setProblem(problemData)
-      
+
       // 期限チェック（初回のみ）
       if (problemData.deadline) {
         const now = new Date()
         const deadlineDate = new Date(problemData.deadline)
-        
+
         if (now >= deadlineDate) {
           // 期限切れの場合、結果ページへ遷移
           navigate(`/results/${problemId}`, { replace: true })
@@ -123,6 +123,19 @@ export function Questionnaire() {
         </div>
 
         <p className="problem-description">{problem.description}</p>
+
+        {problem.deadline && (
+          <div className="deadline-info">
+            <span className="deadline-label">回答期限:</span>
+            <span className="deadline-date">
+              {new Date(problem.deadline).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+          </div>
+        )}
 
         <div className="questionnaire-content">
           <div className="board-wrapper">

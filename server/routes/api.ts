@@ -147,6 +147,7 @@ router.get('/problems', async (req: Request, res: Response) => {
       createdDate: problem.createdAt.toISOString().split('T')[0], // 互換性のため一時的に残す
       createdAt: problem.createdAt,
       answerCount: problem._count.answers,
+      deadline: problem.deadline, // 期限フィールドを追加
     }))
 
     res.json(problemsWithCounts)
