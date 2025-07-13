@@ -13,7 +13,6 @@ public/dist/
 # Database
 prisma/*.db
 prisma/*.db-journal
-prisma/migrations/
 
 # OGP images (generated)
 public/ogp/*.png

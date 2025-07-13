@@ -11,15 +11,26 @@ datasource db {
 }
 
 model Problem {
-  id          Int      @id
-  sgfFilePath String   @map("sgf_file_path")
+  id          Int       @id
+  sgfFilePath String    @map("sgf_file_path")
   description String
-  turn        String   // "black" or "white"
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  turn        String    // "black" or "white"
+  deadline    DateTime? // 期限（オプショナル）
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   answers     Answer[]
 
   @@map("problems")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique
+  authToken String   @unique @map("auth_token")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
 }
 
 model Answer {
