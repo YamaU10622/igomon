@@ -11,12 +11,13 @@ datasource db {
 }
 
 model Problem {
-  id          Int      @id
-  sgfFilePath String   @map("sgf_file_path")
+  id          Int       @id
+  sgfFilePath String    @map("sgf_file_path")
   description String
-  turn        String   // "black" or "white"
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  turn        String    // "black" or "white"
+  deadline    DateTime? // 期限（オプショナル）
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   answers     Answer[]
 
   @@map("problems")
