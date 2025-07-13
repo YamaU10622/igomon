@@ -87,12 +87,12 @@ export function Home() {
                           {problem.turn === 'black' ? '黒番' : '白番'}
                         </span>
                         <span className="problem-hasUserAnswered">
-                          {formatDate(new Date()) > formatDate(problem.deadline) ? (
-                            <span className="expired">　解答期限切れ</span>
+                          {( problem.deadline !== undefined && new Date() > new Date(problem.deadline)) ? (
+                            <span className="expired">　回答期限切れ</span>
                           ) : (
                             answeredMap[problem.id] ? (
-                              <span className= "already-answered">　解答済み</span>
-                            ) : (<span className= "notyet-answered">　未解答</span>
+                              <span className= "already-answered">　回答済み</span>
+                            ) : (<span className= "notyet-answered">　未回答</span>
                           ))}
                         </span>
                       </div>
