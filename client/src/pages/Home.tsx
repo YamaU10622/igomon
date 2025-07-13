@@ -89,7 +89,7 @@ export function Home() {
                         <span className="problem-hasUserAnswered">
                           { (answeredMap[problem.id] ? (
                               <span className= "already-answered">　回答済み</span>
-                            ) : (( problem.deadline !== undefined && problem.deadline !== "" && new Date() > new Date(problem.deadline)) ? (
+                            ) : (( problem.deadline && new Date() > new Date(problem.deadline)) ? (
                             <span className="expired">　回答期限切れ</span>
                           ):(<span className="notyet-answered">　未回答</span>)))}
                         </span>
