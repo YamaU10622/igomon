@@ -1,5 +1,6 @@
 // client/src/utils/api.ts
 import { getUserUuid } from './uuid'
+import { fetchWithAuth } from './api-helper'
 
 export async function submitAnswer(answerData: {
   problemId: number
@@ -8,17 +9,12 @@ export async function submitAnswer(answerData: {
   playerName: string
   playerRank: string
 }) {
-  const userUuid = getUserUuid()
-
-  const response = await fetch('/api/answers', {
+  const response = await fetchWithAuth('/api/answers', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      ...answerData,
-      userUuid,
-    }),
+    body: JSON.stringify(answerData),
   })
 
   const responseData = await response.json()
@@ -42,7 +38,7 @@ export async function submitAnswer(answerData: {
 export async function getResults(problemId: number) {
   const url = `/api/results/${problemId}`
 
-  const response = await fetch(url)
+  const response = await fetchWithAuth(url)
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
     if (errorData.error) {
@@ -54,14 +50,11 @@ export async function getResults(problemId: number) {
 }
 
 export async function deleteAnswer(answerId: number) {
-  const userUuid = getUserUuid()
-
-  const response = await fetch(`/api/answers/${answerId}`, {
+  const response = await fetchWithAuth(`/api/answers/${answerId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ userUuid }),
+    }
   })
 
   if (!response.ok) {
@@ -100,8 +93,7 @@ export async function getProblem(problemId: string) {
 }
 
 export async function hasUserAnswered(problemId: number): Promise<boolean> {
-  const userUuid = getUserUuid()
-  const response = await fetch(`/api/problems/${problemId}/answered?userUuid=${userUuid}`)
+  const response = await fetchWithAuth(`/api/problems/${problemId}/answered`)
   if (!response.ok) {
     return false
   }

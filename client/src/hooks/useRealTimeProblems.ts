@@ -9,6 +9,7 @@ interface Problem {
   createdDate?: string // 互換性のため一時的に残す
   createdAt: string | Date
   answerCount?: number
+  deadline?: string | Date // 期限フィールドを追加
 }
 
 export function useRealTimeProblems() {

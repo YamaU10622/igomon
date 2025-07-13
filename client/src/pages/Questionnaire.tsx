@@ -1,10 +1,9 @@
 // client/src/pages/Questionnaire.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { AnswerForm } from '../components/AnswerForm'
 import { getProblem, submitAnswer, hasUserAnswered } from '../utils/api'
-import { getUserUuid } from '../utils/uuid'
 
 export function Questionnaire() {
   const { problemId } = useParams<{ problemId: string }>()
@@ -44,6 +43,18 @@ export function Questionnaire() {
       setLoading(true)
       const problemData = await getProblem(problemId!)
       setProblem(problemData)
+
+      // 期限チェック（初回のみ）
+      if (problemData.deadline) {
+        const now = new Date()
+        const deadlineDate = new Date(problemData.deadline)
+
+        if (now >= deadlineDate) {
+          // 期限切れの場合、結果ページへ遷移
+          navigate(`/results/${problemId}`, { replace: true })
+          return
+        }
+      }
     } catch (err) {
       setError('問題の読み込みに失敗しました')
       console.error(err)
@@ -62,7 +73,8 @@ export function Questionnaire() {
 
     try {
       setIsSubmitting(true)
-      const result = await submitAnswer({
+      setError('') // エラーをクリア
+      await submitAnswer({
         problemId: problem.id,
         ...formData,
       })
@@ -111,6 +123,19 @@ export function Questionnaire() {
         </div>
 
         <p className="problem-description">{problem.description}</p>
+
+        {problem.deadline && (
+          <div className="deadline-info">
+            <span className="deadline-label">回答期限:</span>
+            <span className="deadline-date">
+              {new Date(problem.deadline).toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+          </div>
+        )}
 
         <div className="questionnaire-content">
           <div className="board-wrapper">

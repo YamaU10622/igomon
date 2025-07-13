@@ -1,10 +1,9 @@
 // client/src/pages/Results.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { ResultsDisplay } from '../components/ResultsDisplay'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
-import { getUserUuid } from '../utils/uuid'
 import { RANKS } from '../utils/rankUtils'
 
 export function Results() {
@@ -28,7 +27,23 @@ export function Results() {
 
   const checkAnswerStatus = async () => {
     try {
-      // ユーザーが回答済みかチェック
+      // まず問題データを取得して期限を確認
+      const problemData = await getProblem(problemId!)
+      
+      // 期限チェック
+      if (problemData.deadline) {
+        const now = new Date()
+        const deadlineDate = new Date(problemData.deadline)
+        
+        if (now >= deadlineDate) {
+          // 期限切れの場合は回答状態に関わらず結果を表示
+          setProblem(problemData)
+          loadResultsOnly()
+          return
+        }
+      }
+      
+      // 期限内の場合、ユーザーが回答済みかチェック
       const answered = await hasUserAnswered(parseInt(problemId!))
 
       if (!answered) {
@@ -38,10 +53,25 @@ export function Results() {
       }
 
       // 回答済みの場合はデータを読み込む
-      loadData()
+      setProblem(problemData)
+      loadResultsOnly()
     } catch (err) {
       console.error('回答状態の確認に失敗しました:', err)
       setError('回答状態の確認に失敗しました')
+      setLoading(false)
+    }
+  }
+  
+  const loadResultsOnly = async () => {
+    try {
+      setLoading(true)
+      const resultsData = await getResults(parseInt(problemId!))
+      setAllResults(resultsData)
+      filterResults(resultsData, minRank, maxRank)
+    } catch (err) {
+      setError('結果の読み込みに失敗しました')
+      console.error(err)
+    } finally {
       setLoading(false)
     }
   }
