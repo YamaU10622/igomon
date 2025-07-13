@@ -86,8 +86,8 @@ export function Home() {
                       </span>
                       <span className="problem-hasUserAnswered">
                         {answeredMap[problem.id] ? (
-                        <span className = "already-answered">回答済み</span>
-                        ) : (<span className = "notyet-answered">未回答</span>
+                        <span className = "already-answered">解答済み</span>
+                        ) : (<span className = "notyet-answered">未解答</span>
                         )}
                       </span>
                       <span className="problem-date">
