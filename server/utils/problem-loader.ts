@@ -75,7 +75,7 @@ function parseDescriptionFile(content: string): ParsedProblemData {
 
   // 必須項目のチェック（新フォーマット）
   if (!data.description) {
-    throw new Error('必須項目が不足しています: turn, description')
+    throw new Error('必須項目が不足しています: description')
   }
 
   return {
