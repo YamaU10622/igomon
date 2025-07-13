@@ -1,4 +1,9 @@
 // server/index.ts
+// 開発環境でもタイムゾーンを日本時間に設定
+if (!process.env.TZ) {
+  process.env.TZ = 'Asia/Tokyo'
+}
+
 import express, { Request, Response } from 'express'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
