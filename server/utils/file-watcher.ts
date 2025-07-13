@@ -12,6 +12,7 @@ export class ProblemWatcher {
   private io: SocketIOServer
   private watcher!: FSWatcher
   private problemsDir: string
+  private updateTimers: Map<string, NodeJS.Timeout> = new Map()
 
   constructor(io: SocketIOServer) {
     this.io = io
@@ -46,7 +47,7 @@ export class ProblemWatcher {
     this.watcher.on('add', (filePath: string) => {
       if (this.isRelevantFile(filePath)) {
         const problemDir = path.dirname(filePath)
-        this.handleProblemUpdate(problemDir)
+        this.debouncedHandleProblemUpdate(problemDir)
       }
     })
 
@@ -54,7 +55,7 @@ export class ProblemWatcher {
     this.watcher.on('change', (filePath: string) => {
       if (this.isRelevantFile(filePath)) {
         const problemDir = path.dirname(filePath)
-        this.handleProblemUpdate(problemDir)
+        this.debouncedHandleProblemUpdate(problemDir)
       }
     })
 
@@ -100,6 +101,24 @@ export class ProblemWatcher {
     }
   }
 
+  private debouncedHandleProblemUpdate(dirPath: string) {
+    const problemId = path.basename(dirPath)
+    
+    // 既存のタイマーがあればクリア
+    const existingTimer = this.updateTimers.get(problemId)
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+    }
+    
+    // 新しいタイマーを設定（500ms後に実行）
+    const timer = setTimeout(() => {
+      this.handleProblemUpdate(dirPath)
+      this.updateTimers.delete(problemId)
+    }, 500)
+    
+    this.updateTimers.set(problemId, timer)
+  }
+
   private async handleProblemUpdate(dirPath: string) {
     const problemId = path.basename(dirPath)
 
@@ -109,9 +128,11 @@ export class ProblemWatcher {
 
       if (problemData) {
         console.log(`Problem updated: ${problemId}`)
+        console.log(`Problem ID type: ${typeof problemData.id}, value: ${problemData.id}`)
 
         // データベースに問題が存在するか確認
         const exists = await problemExists(problemData.id)
+        console.log(`Problem exists check for ID ${problemData.id}: ${exists}`)
 
         if (!exists) {
           // 問題がデータベースに存在しない場合は新規登録
@@ -125,6 +146,17 @@ export class ProblemWatcher {
             },
           })
           console.log(`Problem ${problemId} registered in database`)
+        } else {
+          // 既存の問題の場合は更新
+          await prisma.problem.update({
+            where: { id: problemData.id },
+            data: {
+              description: problemData.description,
+              turn: problemData.turn as 'black' | 'white',
+              deadline: problemData.deadline,
+            },
+          })
+          console.log(`Problem ${problemId} updated in database`)
         }
 
         // OGP画像を生成
