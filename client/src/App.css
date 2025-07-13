@@ -184,9 +184,28 @@ button:hover {
   color: #666;
 }
 
+.turn-and-answered{
+  display: flex;
+}
+
 .problem-turn {
   font-weight: 500;
   color: #333;
+}
+
+.problem-hasUserAnswered {
+  font-weight: 500;
+}
+
+.expired {
+  color: #f44336
+}
+
+.already-answered {
+  color: #4caf50;
+}
+.notyet-answered {
+  color: #f44336;
 }
 
 .problem-date {
