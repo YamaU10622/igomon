@@ -246,6 +246,7 @@ button:hover {
 .problem-description {
   font-size: 16px;
   color: #333;
+  margin-bottom: 12px;
   line-height: 1.6;
 }
 
