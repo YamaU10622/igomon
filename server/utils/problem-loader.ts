@@ -88,7 +88,7 @@ function parseDescriptionFile(content: string): ParsedProblemData {
 function getNextTurn(sgfString: string): string {
   // メインのゲーム木のみ利用
   const sgfMainBranch = extractMainRoute(sgfString)
-  const sgfElements = sgfMainBranch[0].split(";")
+  const sgfElements = sgfMainBranch.split(";")
   
   // 最終手を取得
   const sgfLastElements = sgfElements[sgfElements.length - 1]
