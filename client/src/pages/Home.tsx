@@ -4,6 +4,7 @@ import { useRealTimeProblems } from '../hooks/useRealTimeProblems'
 import { Link } from 'react-router-dom'
 import { getUserUuid } from '../utils/uuid'
 import { hasUserAnswered } from '../utils/api'
+import { format } from 'path'
 
 export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
@@ -11,15 +12,15 @@ export function Home() {
   const [answeredMap, setAnsweredMap] = useState<{ [problemId: number]: boolean }>({})
 
   // 日付をフォーマット（YYYY.MM.DD形式）
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+  const formatDate = (dateInput: string | Date) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     return `${year}.${month}.${day}`
   }
 
-  // ユーザーが回答済みかどうかを問題ごとにチェック
+    // ユーザーが回答済みかどうかを問題ごとにチェック
   useEffect( () => {
       const checkHasUserAnswered = async() =>  {
 
@@ -81,18 +82,28 @@ export function Home() {
                   </div>
                   <div className="problem-info">
                     <div className="problem-details">
-                      <span className="problem-turn">
-                        {problem.turn === 'black' ? '黒番' : '白番'}　解答
-                      </span>
-                      <span className="problem-hasUserAnswered">
-                        {answeredMap[problem.id] ? (
-                        <span className = "already-answered">解答済み</span>
-                        ) : (<span className = "notyet-answered">未解答</span>
-                        )}
-                      </span>
+                      <div className="turn-and-answered">
+                        <span className="problem-turn">
+                          {problem.turn === 'black' ? '黒番' : '白番'}
+                        </span>
+                        <span className="problem-hasUserAnswered">
+                          {formatDate(new Date()) > formatDate(problem.deadline) ? (
+                            <span className="expired">　解答期限切れ</span>
+                          ) : (
+                            answeredMap[problem.id] ? (
+                              <span className= "already-answered">　解答済み</span>
+                            ) : (<span className= "notyet-answered">　未解答</span>
+                          ))}
+                        </span>
+                      </div>
                       <span className="problem-date">
                         ◎ {formatDate(problem.createdAt || problem.createdDate || '')}
                       </span>
+                      {problem.deadline && (
+                        <span className="problem-deadline">
+                          期限: {formatDate(problem.deadline)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
