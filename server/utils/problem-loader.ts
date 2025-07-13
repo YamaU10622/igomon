@@ -49,6 +49,7 @@ export function loadProblemFromDirectory(problemId: string): ProblemData | null 
       turn,
       description: parsedProblemData.description,
       moves: parsedProblemData.moves,
+      deadline: parsedProblemData.deadline,
       sgfContent,
     }
   } catch (error) {
@@ -61,6 +62,7 @@ interface ParsedProblemData {
   turn?: string
   description: string
   moves?: number
+  deadline?: Date
 }
 
 function parseDescriptionFile(content: string): ParsedProblemData {
