@@ -184,7 +184,7 @@ button:hover {
   color: #666;
 }
 
-.turn-and-answered{
+.turn-and-answered {
   display: flex;
 }
 
@@ -198,7 +198,7 @@ button:hover {
 }
 
 .expired {
-  color: #f44336
+  color: #0c71ff;
 }
 
 .already-answered {

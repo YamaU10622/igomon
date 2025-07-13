@@ -20,29 +20,28 @@ export function Home() {
     return `${year}.${month}.${day}`
   }
 
-    // ユーザーが回答済みかどうかを問題ごとにチェック
-  useEffect( () => {
-      const checkHasUserAnswered = async() =>  {
+  // ユーザーが回答済みかどうかを問題ごとにチェック
+  useEffect(() => {
+    const checkHasUserAnswered = async () => {
+      const results = await Promise.all(
+        problems.map(async (problem) => {
+          const hasAnswered = await hasUserAnswered(problem.id)
+          return { id: problem.id, hasAnswered }
+        }),
+      )
 
-        const results = await Promise.all(
-          problems.map(async (problem) => {
-            const hasAnswered = await hasUserAnswered(problem.id)
-            return { id: problem.id, hasAnswered }
-          })
-        )
+      const answeredMap: { [id: number]: boolean } = {}
 
-        const answeredMap: { [id: number]: boolean } = {}
-
-        results.forEach(({id, hasAnswered}) => {
-          answeredMap[id] = hasAnswered
+      results.forEach(({ id, hasAnswered }) => {
+        answeredMap[id] = hasAnswered
       })
-        setAnsweredMap(answeredMap)
-      };
+      setAnsweredMap(answeredMap)
+    }
 
-      if (problems.length > 0) {
-        checkHasUserAnswered()
-      }
-    },[problems] )
+    if (problems.length > 0) {
+      checkHasUserAnswered()
+    }
+  }, [problems])
 
   return (
     <div className="home-page">
@@ -87,11 +86,13 @@ export function Home() {
                           {problem.turn === 'black' ? '黒番' : '白番'}
                         </span>
                         <span className="problem-hasUserAnswered">
-                          { (answeredMap[problem.id] ? (
-                              <span className= "already-answered">　回答済み</span>
-                            ) : (( problem.deadline && new Date() > new Date(problem.deadline)) ? (
-                            <span className="expired">　回答期限切れ</span>
-                          ):(<span className="notyet-answered">　未回答</span>)))}
+                          {answeredMap[problem.id] ? (
+                            <span className="already-answered">　回答済み</span>
+                          ) : problem.deadline && new Date() > new Date(problem.deadline) ? (
+                            <span className="expired">　結果公開</span>
+                          ) : (
+                            <span className="notyet-answered">　未回答</span>
+                          )}
                         </span>
                       </div>
                       <span className="problem-date">
