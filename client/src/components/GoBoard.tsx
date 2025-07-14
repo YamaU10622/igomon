@@ -9,6 +9,7 @@ interface GoBoardProps {
   showClickable?: boolean
   resultsData?: Record<string, { votes: number; answers: any[] }>
   maxMoves?: number // movesパラメータ対応
+  derivedTurn: "black" | "white"
 }
 
 declare global {
@@ -23,6 +24,7 @@ export default function GoBoard({
   showClickable = false,
   resultsData,
   maxMoves,
+  derivedTurn,
 }: GoBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
   const [board, setBoard] = useState<any>(null)
@@ -138,8 +140,8 @@ export default function GoBoard({
             let lastClickMarker: any = null
 
             // 現在の手番を取得（黒番: 1, 白番: -1）
-            const currentTurn = game.turn
-
+            const currentTurn = derivedTurn === "black" ? window.WGo.B : window.WGo.W
+	    
             // カスタム着手点マーカーハンドラーを定義
             const clickMarkerHandler = {
               stone: {
@@ -187,7 +189,7 @@ export default function GoBoard({
 
             newBoard.addEventListener('click', (x: number, y: number) => {
               // 着手禁止点、盤外の点などは無視
-              if (!game.isValid(x, y)) return
+              if (!game.isValid(x, y, currentTurn)) return
 
               // 公式座標システム（相対座標）
               const coordinate = wgoToSgfCoords(x, y)

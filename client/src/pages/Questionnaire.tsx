@@ -144,6 +144,7 @@ export function Questionnaire() {
               maxMoves={problem.moves}
               onCoordinateSelect={setSelectedCoordinate}
               showClickable={true}
+              derivedTurn={problem.turn}
             />
           </div>
 
