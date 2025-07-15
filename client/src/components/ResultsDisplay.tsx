@@ -1,5 +1,5 @@
 // client/src/components/ResultsDisplay.tsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
 import { RangeSlider } from './RangeSlider'
@@ -35,6 +35,7 @@ export function ResultsDisplay({
   const [selectedSgfCoordinate, setSelectedSgfCoordinate] = useState<string | null>(null)
   const navigate = useNavigate()
   const { problemId } = useParams<{ problemId: string }>()
+  const answersListRef = useRef(null);
 
   // 表示座標からSGF座標に変換する関数
   const displayToSgfCoordinate = (displayCoord: string): string => {
@@ -93,6 +94,13 @@ export function ResultsDisplay({
       ? results[selectedSgfCoordinate].answers
       : []
 
+  useEffect(() => {
+    // 回答欄のスクロールを一番上に戻す
+    if (answersListRef.current && answersListRef.current.scrollTop > 0) {
+      answersListRef.current.scroll({top: 0, behavior: 'smooth'})
+    }
+  }, [selectedAnswers])
+
   return (
     <div className="results-display">
       <div className="results-summary">
@@ -106,7 +114,7 @@ export function ResultsDisplay({
       {selectedCoordinate && selectedAnswers.length > 0 && (
         <div className="answer-details">
           <h3 className="coordinate-header">{selectedCoordinate}</h3>
-          <div className="answers-list">
+          <div className="answers-list" ref={answersListRef}>
             {selectedAnswers.map((answer) => (
               <div key={answer.id} className="answer-item">
                 <div className="answer-meta">
