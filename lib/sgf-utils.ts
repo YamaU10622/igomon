@@ -55,3 +55,39 @@ export function sgfToNumericCoords(sgfCoord: string): { x: number; y: number } {
 export function numericToSgfCoords(x: number, y: number): string {
   return String.fromCharCode('a'.charCodeAt(0) + x) + String.fromCharCode('a'.charCodeAt(0) + y)
 }
+
+/**
+ * SGF文字列から次の手番を判定する
+ * @param sgfString SGF文字列
+ * @returns 次の手番 ("black" または "white")
+ */
+export function getNextTurn(sgfString: string): string {
+  // メインのゲーム木のみ利用
+  const sgfMainBranch = extractMainRoute(sgfString)
+  
+  try {
+    // @sabaki/sgfでパース
+    const roots = sgf.parse(sgfMainBranch)
+    if (!roots || roots.length === 0) return "black"
+    
+    // メインラインの最終ノードまで辿る
+    let currentNode = roots[0]
+    while (currentNode.children && currentNode.children.length > 0) {
+      currentNode = currentNode.children[0]
+    }
+    
+    // 最終ノードのプロパティをチェック
+    if (currentNode.data) {
+      // W[..] プロパティがあれば次は黒番
+      if (currentNode.data.W) return "black"
+      // B[..] プロパティがあれば次は白番
+      if (currentNode.data.B) return "white"
+    }
+    
+    // 見つからない場合は黒番を返す
+    return "black"
+  } catch (error) {
+    console.error('SGFパースエラー:', error)
+    return "black"
+  }
+}

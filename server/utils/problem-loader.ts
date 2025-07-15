@@ -1,7 +1,7 @@
 // server/utils/problem-loader.ts
 import fs from 'fs'
 import path from 'path'
-import { extractMainRoute } from '../../lib/sgf-utils'
+import { extractMainRoute, getNextTurn } from '../../lib/sgf-utils'
 
 interface ProblemData {
   id: number
@@ -38,10 +38,9 @@ export function loadProblemFromDirectory(problemId: string): ProblemData | null 
     let turn = parsedProblemData.turn
     if (!turn) {
       if (parsedProblemData.moves !== undefined) {
-	turn = parsedProblemData.moves % 2 === 1 ? 'white' : 'black'
-      }
-      else {
-	turn = getNextTurn(sgfContent)
+        turn = parsedProblemData.moves % 2 === 1 ? 'white' : 'black'
+      } else {
+        turn = getNextTurn(sgfContent)
       }
     }
 
@@ -89,22 +88,3 @@ function parseDescriptionFile(content: string): ParsedProblemData {
     deadline: data.deadline ? new Date(data.deadline) : undefined,
   }
 }
-
-function getNextTurn(sgfString: string): string {
-  // メインのゲーム木のみ利用
-  const sgfMainBranch = extractMainRoute(sgfString)
-  const sgfElements = sgfMainBranch.split(";")
-  
-  // 最終手を取得
-  const sgfLastElements = sgfElements[sgfElements.length - 1]
-
-  // W[..] であって AW[..] でないものとの正規表現マッチ
-  const regexWhite = /(?<!A)W\[[a-s]{2}\]/;
-  const regexBlack = /(?<!A)B\[[a-s]{2}\]/;
-  if (regexWhite.test(sgfLastElements)) return "black"
-  else if (regexBlack.test(sgfLastElements)) return "white"
-  
-  // 上記の正規表現マッチに失敗したときは黒番で返す
-  else return "black"
-}
-
