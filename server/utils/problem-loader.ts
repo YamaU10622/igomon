@@ -1,6 +1,7 @@
 // server/utils/problem-loader.ts
 import fs from 'fs'
 import path from 'path'
+import { extractMainRoute } from '../../lib/sgf-utils'
 
 interface ProblemData {
   id: number
@@ -107,36 +108,3 @@ function getNextTurn(sgfString: string): string {
   else return "black"
 }
 
-// SGFからメインルートを取得
-// コメント内の `)` は無視し、分岐を生成する `)` 以前を取得する
-function extractMainRoute(sgfContent: string): string {
-  let inValue = false   // '[' ～ ']' 内に居るか
-  let escape  = false   // 直前が '\' かどうか
-  let result  = ''
-
-  for (const ch of sgfContent) {
-    if (inValue) { // [ ] プロパティの内部
-      result += ch
-      if (escape) {
-        escape = false
-      }
-      else if (ch === '\\') escape = true   // 次の 1 文字をエスケープ
-      else if (ch === ']')  inValue = false // プロパティ終了
-      continue
-    }
-
-    // プロパティ値の外
-    if (ch === '[') {
-      inValue = true
-      result += ch
-      continue
-    }
-
-    if (ch === ')') {
-      // これ以降は分岐なので捨てる
-      break
-    }
-    result += ch
-  }
-  return result
-}
