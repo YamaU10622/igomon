@@ -1,7 +1,7 @@
 // server/utils/problem-loader.ts
 import fs from 'fs'
 import path from 'path'
-import { extractMainRoute, getNextTurn } from '../../lib/sgf-utils'
+import { getNextTurn } from '../../lib/sgf-utils'
 
 interface ProblemData {
   id: number

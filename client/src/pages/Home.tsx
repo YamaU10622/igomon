@@ -1,14 +1,11 @@
 // client/src/pages/Home.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRealTimeProblems } from '../hooks/useRealTimeProblems'
 import { Link } from 'react-router-dom'
-import { getUserUuid } from '../utils/uuid'
 import { hasUserAnswered } from '../utils/api'
-import { format } from 'path'
 
 export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
-  const [answeredProblems, setAnsweredProblems] = useState<Set<number>>(new Set())
   const [answeredMap, setAnsweredMap] = useState<{ [problemId: number]: boolean }>({})
 
   // 日付をフォーマット（YYYY.MM.DD形式）
