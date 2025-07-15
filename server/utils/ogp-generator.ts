@@ -2,6 +2,7 @@
 import { createCanvas } from 'canvas'
 import fs from 'fs'
 import path from 'path'
+import { buildBoardFromSGF } from '../../lib/sgf-utils'
 
 interface StonePosition {
   x: number
@@ -147,45 +148,9 @@ export class OGPGenerator {
 
   private parseSGF(sgfContent: string, maxMoves?: number): StonePosition[] {
     const stones: StonePosition[] = []
-    const board: (0 | 1 | -1)[][] = Array(19)
-      .fill(null)
-      .map(() => Array(19).fill(0))
 
-    // 黒石の手を抽出
-    const blackMoves = [...sgfContent.matchAll(/;B\[([a-s])([a-s])\]/g)]
-    // 白石の手を抽出
-    const whiteMoves = [...sgfContent.matchAll(/;W\[([a-s])([a-s])\]/g)]
-
-    // すべての手を順番に処理（簡易版）
-    let moveCount = 0
-    const allMoves: { match: RegExpMatchArray; color: 'black' | 'white' }[] = []
-
-    // SGFの順序を保持するため、インデックスも記録
-    blackMoves.forEach((match) => {
-      allMoves.push({ match, color: 'black' })
-    })
-    whiteMoves.forEach((match) => {
-      allMoves.push({ match, color: 'white' })
-    })
-
-    // SGF内での出現順にソート（簡易版）
-    allMoves.sort((a, b) => {
-      const aIndex = sgfContent.indexOf(a.match[0])
-      const bIndex = sgfContent.indexOf(b.match[0])
-      return aIndex - bIndex
-    })
-
-    // 指定された手数まで処理
-    for (const move of allMoves) {
-      if (maxMoves !== undefined && moveCount >= maxMoves) break
-
-      const x = move.match[1].charCodeAt(0) - 'a'.charCodeAt(0)
-      const y = move.match[2].charCodeAt(0) - 'a'.charCodeAt(0)
-
-      // 石を配置（取られた石の処理は簡易的に省略）
-      board[x][y] = move.color === 'black' ? 1 : -1
-      moveCount++
-    }
+    // SGFをパースして盤面を生成
+    const board = buildBoardFromSGF(sgfContent, maxMoves)
 
     // 盤面の状態から石の位置を抽出
     for (let x = 0; x < 19; x++) {
