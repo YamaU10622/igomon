@@ -150,29 +150,31 @@ export function getNextTurn(sgfString: string): string {
  * @returns number[][] 盤面, 各要素は -1=白 0=空 1=黒 を示す
  */
 export function buildBoardFromSGF(sgfContent: string, upToMove?: number): number[][] {
-  // メインのゲーム木のみ使用
-  const sgfMainBranch = extractMainRoute(sgfContent)
+  try {
+    // SGF をパースして盤面サイズを取得, パースに失敗したら19路盤にする
+    const [root] = sgf.parse(sgfContent) as any[]
+    const boardSize = !root ? 19 : Number(root.data?.SZ?.[0] ?? 19) || 19
 
-  // SGF をパース
-  const [root] = sgf.parse(sgfMainBranch) as any[]
-  if (!root) throw new Error('SGF parse error')
+    // 盤の生成
+    let board = Board.fromDimensions(boardSize)
 
-  const boardSize = Number(root.data?.SZ?.[0] ?? 19) || 19
+    // 指定手数まで進める 指定手数よりもSGFの手数が短ければSGFの手数を採用
+    const moves = parseSgfMoves(sgfContent) // parseSGFMoves の中で主分岐をとる操作が行われている
+    const limit = Math.min(upToMove ?? moves.length, moves.length)
 
-  // 盤の生成
-  let board = Board.fromDimensions(boardSize)
+    for (let i = 0; i < limit; ++i) {
+      const { color, x, y } = moves[i]
+      board = board.makeMove(color as Sign, [x, y])
+    }
 
-  // 指定手数まで進める 指定手数よりもSGFの手数が短ければSGFの手数を採用
-  const moves = parseSgfMoves(sgfMainBranch)
-  const limit = Math.min(upToMove ?? moves.length, moves.length)
-
-  for (let i = 0; i < limit; ++i) {
-    const { color, x, y } = moves[i]
-    board = board.makeMove(color as Sign, [x, y])
+    // number[][] に変換して返却
+    return Array.from({ length: boardSize }, (_, x) =>
+      Array.from({ length: boardSize }, (_, y) => board.get([x, y]) as number),
+    )
+  } catch (error) {
+    console.error('SGFパースエラー:', error)
+    // パースに失敗したときは空の19路盤を返す
+    const emptyBoard: number[][] = Array.from({ length: 19 }, () => Array(19).fill(0))
+    return emptyBoard
   }
-
-  // number[][] に変換して返却
-  return Array.from({ length: boardSize }, (_, x) =>
-    Array.from({ length: boardSize }, (_, y) => board.get([x, y]) as number),
-  )
 }
