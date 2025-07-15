@@ -2,6 +2,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import '../styles/GoBoard.css'
+import { parseSgfMoves } from '../../../lib/sgf-utils'
 
 interface GoBoardProps {
   sgfContent: string
@@ -274,12 +275,14 @@ export default function GoBoard({
         if (maxMoves !== undefined && index >= maxMoves) return
 
         if (move.color && move.x !== undefined && move.y !== undefined) {
+          // sgf-utilsから返されるcolor値（1 or -1）をWGo.jsの値に変換
+          const wgoColor = move.color === 1 ? window.WGo.B : window.WGo.W
           // 公式play()メソッド使用
-          const result = game.play(move.x, move.y, move.color)
+          const result = game.play(move.x, move.y, wgoColor)
 
           // maxMovesで制限される最後の手を記録
           if (maxMoves === undefined || index === maxMoves - 1) {
-            lastMove = move
+            lastMove = { x: move.x, y: move.y, color: wgoColor }
           }
         }
       })
@@ -459,63 +462,7 @@ export default function GoBoard({
     boardInstance.addEventListener('click', resultClickHandlerRef.current)
   }
 
-  // 簡易SGFパーサー
-  const parseSgfMoves = (sgfContent: string) => {
-    const moves: Array<{ color: number; x: number; y: number }> = []
 
-    // SGFから手順を順番通りに抽出（黒番Bと白番Wを交互に）
-    // メインのゲーム木を取得し、手順の再現はメインのルートに絞る
-    const sgfMainBranch = extractMainRoute(sgfContent)
-    const movePattern = /;([BW])\[([a-s][a-s])\]/g
-    let match
-
-    while ((match = movePattern.exec(sgfMainBranch)) !== null) {
-      const color = match[1] === 'B' ? window.WGo.B : window.WGo.W
-      const coords = match[2]
-
-      if (coords && coords.length === 2) {
-        const x = coords.charCodeAt(0) - 'a'.charCodeAt(0)
-        const y = coords.charCodeAt(1) - 'a'.charCodeAt(0)
-        moves.push({ color, x, y })
-      }
-    }
-
-    return moves
-  }
-
-  // SGFからメインルートを取得
-  // コメント内の `)` は無視し、分岐を生成する `)` 以前を取得する
-  const extractMainRoute = (sgfContent: string): string => {
-    let inValue = false   // '[' ～ ']' 内に居るか
-    let escape  = false   // 直前が '\' かどうか
-    let result  = ''
-
-    for (const ch of sgfContent) {
-      if (inValue) { // [ ] プロパティの内部
-	result += ch
-	if (escape) {
-          escape = false
-	}
-	else if (ch === '\\') escape = true   // 次の 1 文字をエスケープ
-	else if (ch === ']')  inValue = false // プロパティ終了
-	continue
-      }
-
-      // プロパティ値の外
-      if (ch === '[') {
-	inValue = true
-	result += ch
-	continue
-      }
-
-      if (ch === ')') {
-	// これ以降は分岐なので捨てる
-	break
-      }
-      result += ch
-    }
-    return result
-  }
 
   // 座標変換（公式座標システム準拠）
   const sgfToWgoCoords = (sgfCoord: string): { x: number; y: number } => {
