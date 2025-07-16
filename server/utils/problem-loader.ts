@@ -1,6 +1,7 @@
 // server/utils/problem-loader.ts
 import fs from 'fs'
 import path from 'path'
+import { getNextTurn } from '../../lib/sgf-utils'
 
 interface ProblemData {
   id: number
@@ -37,10 +38,9 @@ export function loadProblemFromDirectory(problemId: string): ProblemData | null 
     let turn = parsedProblemData.turn
     if (!turn) {
       if (parsedProblemData.moves !== undefined) {
-	turn = parsedProblemData.moves % 2 === 1 ? 'white' : 'black'
-      }
-      else {
-	turn = getNextTurn(sgfContent)
+        turn = parsedProblemData.moves % 2 === 1 ? 'white' : 'black'
+      } else {
+        turn = getNextTurn(sgfContent)
       }
     }
 
@@ -87,56 +87,4 @@ function parseDescriptionFile(content: string): ParsedProblemData {
     moves: data.moves ? parseInt(data.moves) : undefined,
     deadline: data.deadline ? new Date(data.deadline) : undefined,
   }
-}
-
-function getNextTurn(sgfString: string): string {
-  // メインのゲーム木のみ利用
-  const sgfMainBranch = extractMainRoute(sgfString)
-  const sgfElements = sgfMainBranch.split(";")
-  
-  // 最終手を取得
-  const sgfLastElements = sgfElements[sgfElements.length - 1]
-
-  // W[..] であって AW[..] でないものとの正規表現マッチ
-  const regexWhite = /(?<!A)W\[[a-s]{2}\]/;
-  const regexBlack = /(?<!A)B\[[a-s]{2}\]/;
-  if (regexWhite.test(sgfLastElements)) return "black"
-  else if (regexBlack.test(sgfLastElements)) return "white"
-  
-  // 上記の正規表現マッチに失敗したときは黒番で返す
-  else return "black"
-}
-
-// SGFからメインルートを取得
-// コメント内の `)` は無視し、分岐を生成する `)` 以前を取得する
-function extractMainRoute(sgfContent: string): string {
-  let inValue = false   // '[' ～ ']' 内に居るか
-  let escape  = false   // 直前が '\' かどうか
-  let result  = ''
-
-  for (const ch of sgfContent) {
-    if (inValue) { // [ ] プロパティの内部
-      result += ch
-      if (escape) {
-        escape = false
-      }
-      else if (ch === '\\') escape = true   // 次の 1 文字をエスケープ
-      else if (ch === ']')  inValue = false // プロパティ終了
-      continue
-    }
-
-    // プロパティ値の外
-    if (ch === '[') {
-      inValue = true
-      result += ch
-      continue
-    }
-
-    if (ch === ')') {
-      // これ以降は分岐なので捨てる
-      break
-    }
-    result += ch
-  }
-  return result
 }
