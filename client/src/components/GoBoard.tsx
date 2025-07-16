@@ -473,11 +473,18 @@ export default function GoBoard({
                 const yr = board.getY(args.y)
                 const sr = board.stoneRadius
 
-                // 着手選択マーク（碁石を囲む赤い円）を描画
+                // 着手選択マーク（碁石を囲む白い円）を描画
+                // 外側の半透明の円
                 ctx.beginPath()
-                ctx.arc(xr, yr, sr, 0, 2 * Math.PI, true)
+                ctx.arc(xr, yr, sr + 3, 0, 2 * Math.PI, true)
                 ctx.lineWidth = 3
-                ctx.strokeStyle = "#ff0000"
+                ctx.strokeStyle = "rgb(255 255 255 / 60%)"
+                ctx.stroke()
+                // 内側の円
+                ctx.beginPath()
+                ctx.arc(xr, yr, sr + 1, 0, 2 * Math.PI, true)
+                ctx.lineWidth = 2
+                ctx.strokeStyle = "#fff"
                 ctx.stroke()
               },
             },
