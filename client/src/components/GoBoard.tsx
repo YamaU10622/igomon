@@ -30,6 +30,7 @@ export default function GoBoard({
   const boardRef = useRef<HTMLDivElement>(null)
   const [board, setBoard] = useState<any>(null)
   const [isWgoLoaded, setIsWgoLoaded] = useState(false)
+  const clickedMarkRef = useRef<any>(null)
 
   // WGo.jsの読み込み確認（公式推奨方式）
   useEffect(() => {
@@ -453,6 +454,44 @@ export default function GoBoard({
 
       if (results[coordinate]) {
         showAnswerDetails(coordinate, results[coordinate])
+
+        // 着手選択マークが既に盤上にあるなら消す
+        if (clickedMarkRef.current) {
+          boardInstance.removeObject(clickedMarkRef.current)
+          // なぜかremoveObjectでは完全に消せなかったのでredrawする
+          boardInstance.redraw()
+        }
+
+        clickedMarkRef.current = {
+          x: x,
+          y: y,
+          type: {
+            stone: {
+              draw: function (args: any, board: any) {
+                const ctx = board.stone.getContext(args.x, args.y)
+                const xr = board.getX(args.x)
+                const yr = board.getY(args.y)
+                const sr = board.stoneRadius
+
+                // 着手選択マーク（碁石を囲む白い円）を描画
+                // 外側の半透明の円
+                ctx.beginPath()
+                ctx.arc(xr, yr, sr + 3, 0, 2 * Math.PI, true)
+                ctx.lineWidth = 3
+                ctx.strokeStyle = "rgb(255 255 255 / 60%)"
+                ctx.stroke()
+                // 内側の円
+                ctx.beginPath()
+                ctx.arc(xr, yr, sr + 1, 0, 2 * Math.PI, true)
+                ctx.lineWidth = 2
+                ctx.strokeStyle = "#fff"
+                ctx.stroke()
+              },
+            },
+          },
+        }
+
+        boardInstance.addObject(clickedMarkRef.current)
       } else {
         console.log('No result found for coordinate:', coordinate)
       }
