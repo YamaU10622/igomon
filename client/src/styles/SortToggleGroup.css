@@ -1,0 +1,51 @@
+/* ────────── グループ全体を右寄せ ────────── */
+.sort-toggle-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  gap: 8px; /* ボタン ↔ 縦棒 ↔ ボタン の間隔 */
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ────────── ボタンの共通スタイル ────────── */
+.sort-btn {
+  position: relative; /* ← arrow を右端に固定するため */
+  background: transparent; /* 枠も背景も無し */
+  border: none;
+  padding-right: 1.5em;
+  padding-left: 8px;
+  font-size: 0.85rem;
+  color: #000;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  /* ホバー時も背景色を出さない */
+  background: transparent;
+}
+
+/* ────────── 縦棒 │ ────────── */
+.separator::before {
+  content: '|';
+  color: #000;
+  font-size: 0.9rem;
+  margin-left: -0.25em;
+  margin-right: 0.25em;
+}
+
+/* ────────── 矢印（固定幅でレイアウト不変） ────────── */
+.arrow {
+  position: absolute;
+  right: 0.25em;
+  top: 0;
+  bottom: 0;
+  width: 1em; /* 矢印 1 文字分の幅を常に確保 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
