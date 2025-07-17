@@ -294,6 +294,14 @@ button:hover {
   justify-content: center;
 }
 
+.board-wrapper-sticky {
+  background-color: #fff;
+  position: sticky;
+  padding-top: 10px;
+  top: 0;
+  z-index: 3;
+}
+
 .board-wrapper .igomon-board-container {
   width: 100%;
   max-width: 360px;
@@ -725,6 +733,12 @@ button:hover {
 
 .answers-list::-webkit-scrollbar-thumb:hover {
   background-color: #555;
+}
+
+@media (max-width: 768px) {
+  .answers-list {
+    max-height: none;
+  }
 }
 
 .answer-item {

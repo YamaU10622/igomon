@@ -63,6 +63,11 @@ export function ResultsDisplay({
       // SGF座標も保存
       const sgfCoord = displayToSgfCoordinate(coordinate)
       setSelectedSgfCoordinate(sgfCoord)
+
+      // モバイル端末で見ている場合は画面全体のスクロール位置を調整
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        setTimeout(() => window.scroll({top: 410, behavior: "smooth"}), 1)
+      }
     }
 
     window.addEventListener('showAnswerDetails', handleShowDetails as EventListener)
