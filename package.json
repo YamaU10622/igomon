@@ -30,6 +30,7 @@
   "dependencies": {
     "@prisma/client": "^6.10.1",
     "@sabaki/sgf": "^3.4.7",
+    "@sabaki/go-board": "^1.4.3",
     "canvas": "^3.1.2",
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
