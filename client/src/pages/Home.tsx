@@ -79,18 +79,20 @@ export function Home() {
                   <div className="problem-info">
                     <div className="problem-details">
                       <div className="turn-and-answered">
-                        <span className="problem-turn">
-                          {problem.turn === 'black' ? '黒番' : '白番'}
-                        </span>
-                        <span className="problem-hasUserAnswered">
-                          {answeredMap[problem.id] ? (
-                            <span className="already-answered">回答済み</span>
-                          ) : problem.deadline && new Date() > new Date(problem.deadline) ? (
-                            <span className="expired">結果公開</span>
-                          ) : (
-                            <span className="notyet-answered">未回答</span>
-                          )}
-                        </span>
+                        <div>
+                          <span className="problem-turn">
+                            {problem.turn === 'black' ? '黒番' : '白番'}
+                          </span>
+                          <span className="problem-hasUserAnswered">
+                            {answeredMap[problem.id] ? (
+                              <span className="already-answered">　回答済み</span>
+                            ) : problem.deadline && new Date() > new Date(problem.deadline) ? (
+                               <span className="expired">　結果公開</span>
+                            ) : (
+                              <span className="notyet-answered">　未回答</span>
+                            )}
+                          </span>
+                        </div>
                         <span className="problem-answerCount">
                           {problem._count ? problem._count.answers : problem.answerCount} 票
                         </span>
