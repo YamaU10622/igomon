@@ -66,7 +66,7 @@ export function ResultsDisplay({
 
       // モバイル端末で見ている場合は画面全体のスクロール位置を調整
       if (window.matchMedia("(max-width: 768px)").matches) {
-        setTimeout(() => window.scroll({top: 410, behavior: "smooth"}), 1)
+        setTimeout(() => window.scroll({top: 447, behavior: "smooth"}), 1)
       }
     }
 
@@ -118,7 +118,9 @@ export function ResultsDisplay({
 
       {selectedCoordinate && selectedAnswers.length > 0 && (
         <div className="answer-details">
-          <h3 className="coordinate-header">{selectedCoordinate}</h3>
+          <div className="coordinate-wrapper">
+            <h3 className="coordinate-header">{selectedCoordinate}</h3>
+          </div>
           <div className="answers-list" ref={answersListRef}>
             {selectedAnswers.map((answer) => (
               <div key={answer.id} className="answer-item">

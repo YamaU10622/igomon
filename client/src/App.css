@@ -245,6 +245,12 @@ button:hover {
   box-sizing: border-box;
 }
 
+@media (max-width: 768px) {
+  .questionnaire-container {
+    border: none;
+  }
+}
+
 .problem-header {
   margin-bottom: 8px;
 }
@@ -303,7 +309,7 @@ button:hover {
 .board-wrapper-sticky {
   background-color: #fff;
   position: sticky;
-  padding-top: 10px;
+  padding: 20px 0;
   top: 0;
   z-index: 3;
 }
@@ -699,13 +705,25 @@ button:hover {
   margin-top: 1.5rem;
 }
 
+.coordinate-wrapper {
+  padding: 5px 0;
+  background-color: #fff;
+}
+
+@media (max-width: 768px) {
+  .coordinate-wrapper {
+    position: sticky;
+    top: calc(min(100vw, 390px) - 5px);
+    z-index: 4;
+  }
+}
+
 .coordinate-header {
   font-size: 20px;
   font-weight: bold;
   color: #333;
   background-color: #f0f0f0;
   padding: 0.5rem 1rem;
-  margin-bottom: 1rem;
   border-radius: 4px;
 }
 
@@ -713,6 +731,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-top: 1rem;
   max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -739,12 +758,6 @@ button:hover {
 
 .answers-list::-webkit-scrollbar-thumb:hover {
   background-color: #555;
-}
-
-@media (max-width: 768px) {
-  .answers-list {
-    max-height: none;
-  }
 }
 
 .answer-item {
