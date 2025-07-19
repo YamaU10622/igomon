@@ -186,6 +186,7 @@ button:hover {
 
 .turn-and-answered {
   display: flex;
+  justify-content: space-between;
 }
 
 .problem-turn {
@@ -195,6 +196,11 @@ button:hover {
 
 .problem-hasUserAnswered {
   font-weight: 500;
+}
+
+.problem-answerCount {
+  font-weight: 500;
+  color: #333;
 }
 
 .expired {

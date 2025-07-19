@@ -1,5 +1,6 @@
 // shared/utils/sgf-utils.ts
 import * as sgf from '@sabaki/sgf'
+import Board, { Sign } from '@sabaki/go-board'
 
 /**
  * SGFからメインルートを抽出する
@@ -139,5 +140,41 @@ export function getNextTurn(sgfString: string): string {
   } catch (error) {
     console.error('SGFパースエラー:', error)
     return 'black'
+  }
+}
+
+/**
+ * n手目まで進めた盤面を返す
+ * @param string SGF文字列
+ * @param number 手数
+ * @returns number[][] 盤面, 各要素は -1=白 0=空 1=黒 を示す
+ */
+export function buildBoardFromSGF(sgfContent: string, upToMove?: number): number[][] {
+  try {
+    // SGF をパースして盤面サイズを取得, パースに失敗したら19路盤にする
+    const [root] = sgf.parse(sgfContent) as any[]
+    const boardSize = !root ? 19 : Number(root.data?.SZ?.[0] ?? 19) || 19
+
+    // 盤の生成
+    let board = Board.fromDimensions(boardSize)
+
+    // 指定手数まで進める 指定手数よりもSGFの手数が短ければSGFの手数を採用
+    const moves = parseSgfMoves(sgfContent) // parseSGFMoves の中で主分岐をとる操作が行われている
+    const limit = Math.min(upToMove ?? moves.length, moves.length)
+
+    for (let i = 0; i < limit; ++i) {
+      const { color, x, y } = moves[i]
+      board = board.makeMove(color as Sign, [x, y])
+    }
+
+    // number[][] に変換して返却
+    return Array.from({ length: boardSize }, (_, x) =>
+      Array.from({ length: boardSize }, (_, y) => board.get([x, y]) as number),
+    )
+  } catch (error) {
+    console.error('SGFパースエラー:', error)
+    // パースに失敗したときは空の19路盤を返す
+    const emptyBoard: number[][] = Array.from({ length: 19 }, () => Array(19).fill(0))
+    return emptyBoard
   }
 }
