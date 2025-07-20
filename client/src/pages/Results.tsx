@@ -164,7 +164,7 @@ export function Results() {
         <p className="problem-description">{problem.description}</p>
 
         <div className="questionnaire-content">
-          <div className="board-wrapper">
+          <div className="board-wrapper board-wrapper-sticky">
             <GoBoard
               sgfContent={problem.sgfContent}
               maxMoves={problem.moves}
