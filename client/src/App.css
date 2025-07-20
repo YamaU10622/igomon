@@ -715,6 +715,7 @@ button:hover {
     position: sticky;
     top: calc(min(100vw, 390px) - 5px);
     z-index: 4;
+    padding: 2px 0;
   }
 }
 
@@ -725,6 +726,13 @@ button:hover {
   background-color: #f0f0f0;
   padding: 0.5rem 1rem;
   border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .coordinate-header {
+    font-size: 16px;
+    padding: 0.4rem 0.8rem;
+  }
 }
 
 .answers-list {
@@ -741,6 +749,16 @@ button:hover {
   background-color: #fafafa;
   scrollbar-width: thin;
   scrollbar-color: #888 #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .answers-list {
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: hidden;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
 }
 
 .answers-list::-webkit-scrollbar {
@@ -776,10 +794,24 @@ button:hover {
   border-bottom: 1px solid #eee;
 }
 
+@media (max-width: 768px) {
+  .answer-meta {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
 .player-info {
   display: flex;
   gap: 1rem;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .player-info {
+    font-size: 16px;
+  }
 }
 
 .player-name {
@@ -819,12 +851,25 @@ button:hover {
   background-color: #fff;
 }
 
+@media (max-width: 768px) {
+  .answer-content {
+    padding: 1.25rem;
+  }
+}
+
 .answer-reason {
   line-height: 1.6;
   white-space: pre-wrap;
   font-size: 14px;
   color: #333;
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .answer-reason {
+    font-size: 16px;
+    line-height: 1.8;
+  }
 }
 
 .help-text {
