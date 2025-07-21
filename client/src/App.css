@@ -761,6 +761,13 @@ button:hover {
   }
 }
 
+@media (max-width: 768px) {
+  .coordinate-header {
+    font-size: 16px;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
 .answers-list {
   display: flex;
   flex-direction: column;
