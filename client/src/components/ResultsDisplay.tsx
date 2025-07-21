@@ -3,6 +3,12 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
 import { rankToNumber, normalizeRank } from '../utils/rankUtils'
+import ToggleButton from '@mui/material/ToggleButton'
+import {
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
+  Sort as SortIcon,
+} from '@mui/icons-material'
 import { RangeSlider } from './RangeSlider'
 import '../styles/SortToggleGroup.css'
 
@@ -39,6 +45,7 @@ export function ResultsDisplay({
   const [selectedSgfCoordinate, setSelectedSgfCoordinate] = useState<string | null>(null)
   const [rankSortOrder, setRankSortOrder] = useState<SortOrder | null>(null)
   const [postSortOrder, setPostSortOrder] = useState<SortOrder | null>('asc') // 初期状態では投稿順にソートされている
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
   const navigate = useNavigate()
   const { problemId } = useParams<{ problemId: string }>()
   const answersListRef = useRef(null)
@@ -69,6 +76,11 @@ export function ResultsDisplay({
       // SGF座標も保存
       const sgfCoord = displayToSgfCoordinate(coordinate)
       setSelectedSgfCoordinate(sgfCoord)
+
+      // モバイル端末で見ている場合は画面全体のスクロール位置を調整
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        setTimeout(() => window.scroll({ top: 447, behavior: 'smooth' }), 1)
+      }
     }
 
     window.addEventListener('showAnswerDetails', handleShowDetails as EventListener)
@@ -158,6 +170,19 @@ export function ResultsDisplay({
     }
   }, [sortedAnswers])
 
+  /*  answers-list のスクロールバー幅を測定し state へ反映  */
+  useEffect(() => {
+    const updateScrollbarWidth = () => {
+      const el = answersListRef.current as HTMLElement | null
+      if (!el) return
+      const width = el.offsetWidth - el.clientWidth /* = scrollbar 幅 or 0 */
+      setScrollbarWidth(width)
+    }
+    updateScrollbarWidth()
+    window.addEventListener('resize', updateScrollbarWidth)
+    return () => window.removeEventListener('resize', updateScrollbarWidth)
+  }, [sortedAnswers])
+
   return (
     <div className="results-display">
       <div className="results-summary">
@@ -170,21 +195,62 @@ export function ResultsDisplay({
 
       {selectedCoordinate && selectedAnswers.length > 0 && (
         <div className="answer-details">
-          <h3 className="coordinate-header">{selectedCoordinate}</h3>
-          <div className="sort-toggle-group">
-            <button className="sort-btn" onClick={togglePostSort}>
-              投稿順
-              <span className="arrow">
-                {postSortOrder === 'desc' ? '↑' : postSortOrder === 'asc' ? '↓' : '\u00A0'}
+          <div className="coordinate-wrapper">
+            <h3 className="coordinate-header">
+              {/* 座標（左寄せ） */}
+              <span className="coord-label">{selectedCoordinate}</span>
+
+              {/* ソートトグル（右寄せ） */}
+              <span
+                className="sort-toggle-group"
+                /* answers-list の右 padding(0.5rem=8px) ＋ scrollbar 幅 ＋ border(1px) */
+                style={{ right: `calc(var(--answers-padding-x) + ${scrollbarWidth}px - 1px)` }}
+              >
+                <ToggleButton
+                  size="small"
+                  value="post"
+                  selected={postSortOrder !== null}
+                  onPointerDown={(e) => {
+                    // 長押しによるテキスト選択などを抑止
+                    e.preventDefault()
+                    togglePostSort()
+                  }}
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    minHeight: 28,
+                    fontSize: '0.75rem',
+                    '.MuiSvgIcon-root': { fontSize: 16 },
+                  }}
+                >
+                  投稿順&nbsp;
+                  {postSortOrder === null && <SortIcon fontSize="small" />}
+                  {postSortOrder === 'desc' && <ArrowUpwardIcon fontSize="small" />}
+                  {postSortOrder === 'asc' && <ArrowDownwardIcon fontSize="small" />}
+                </ToggleButton>
+                <ToggleButton
+                  size="small"
+                  value="rank"
+                  selected={rankSortOrder !== null}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    toggleRankSort()
+                  }}
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    minHeight: 28,
+                    fontSize: '0.75rem',
+                    '.MuiSvgIcon-root': { fontSize: 16 },
+                  }}
+                >
+                  段位順&nbsp;
+                  {rankSortOrder === null && <SortIcon fontSize="small" />}
+                  {rankSortOrder === 'desc' && <ArrowUpwardIcon fontSize="small" />}
+                  {rankSortOrder === 'asc' && <ArrowDownwardIcon fontSize="small" />}
+                </ToggleButton>
               </span>
-            </button>
-            <span className="separator" />
-            <button className="sort-btn" onClick={toggleRankSort}>
-              棋力順
-              <span className="arrow">
-                {rankSortOrder === 'desc' ? '↑' : rankSortOrder === 'asc' ? '↓' : '\u00A0'}
-              </span>
-            </button>
+            </h3>
           </div>
           <div className="answers-list" ref={answersListRef}>
             {sortedAnswers.map((answer) => (

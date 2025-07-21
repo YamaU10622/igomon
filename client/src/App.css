@@ -15,6 +15,11 @@ body {
   line-height: 1.6;
 }
 
+:root {
+  /* 回答リスト／ヘッダー共通の左右パディング */
+  --answers-padding-x: 0.5rem; /* PC 基準 */
+}
+
 .app {
   min-height: 100vh;
 }
@@ -186,6 +191,7 @@ button:hover {
 
 .turn-and-answered {
   display: flex;
+  justify-content: space-between;
 }
 
 .problem-turn {
@@ -195,6 +201,11 @@ button:hover {
 
 .problem-hasUserAnswered {
   font-weight: 500;
+}
+
+.problem-answerCount {
+  font-weight: 500;
+  color: #333;
 }
 
 .expired {
@@ -237,6 +248,12 @@ button:hover {
   border-right: 1px solid #e0e0e0;
   padding: 20px;
   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .questionnaire-container {
+    border: none;
+  }
 }
 
 .problem-header {
@@ -292,6 +309,14 @@ button:hover {
 .board-wrapper {
   display: flex;
   justify-content: center;
+}
+
+.board-wrapper-sticky {
+  background-color: #fff;
+  position: sticky;
+  padding: 20px 0;
+  top: 0;
+  z-index: 3;
 }
 
 .board-wrapper .igomon-board-container {
@@ -685,29 +710,81 @@ button:hover {
   margin-top: 1.5rem;
 }
 
+.coordinate-wrapper {
+  padding: 0px 0;
+  background-color: #fff;
+}
+
+@media (max-width: 768px) {
+  .coordinate-wrapper {
+    position: sticky;
+    top: calc(min(100vw, 390px) - 5px);
+    z-index: 4;
+    padding: 2px 0;
+  }
+}
+
 .coordinate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   font-size: 20px;
   font-weight: bold;
   color: #333;
-  background-color: #f0f0f0;
-  padding: 0.5rem 1rem;
+  background-color: transparent;
+  padding: 0 var(--answers-padding-x);
   margin-bottom: 0rem;
   border-radius: 4px;
+  position: relative;
+}
+
+/* 座標ラベルだけに背景と余白を付与 */
+.coord-label {
+  background-color: #f0f0f0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  :root {
+    /* スマホ時のみ 1rem に変更 */
+    --answers-padding-x: 1rem;
+  }
+  .coordinate-header {
+    font-size: 16px;
+    padding: 0.4rem var(--answers-padding-x);
+  }
 }
 
 .answers-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-top: 0rem;
   max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.5rem;
+  padding: var(--answers-padding-x);
   border: 1px solid #eee;
   border-radius: 4px;
   background-color: #fafafa;
   scrollbar-width: thin;
   scrollbar-color: #888 #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .answers-list {
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: hidden;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
 }
 
 .answers-list::-webkit-scrollbar {
@@ -738,15 +815,29 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: #f8f8f8;
   border-bottom: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .answer-meta {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
 }
 
 .player-info {
   display: flex;
   gap: 1rem;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .player-info {
+    font-size: 16px;
+  }
 }
 
 .player-name {
@@ -786,12 +877,25 @@ button:hover {
   background-color: #fff;
 }
 
+@media (max-width: 768px) {
+  .answer-content {
+    padding: 1.25rem;
+  }
+}
+
 .answer-reason {
   line-height: 1.6;
   white-space: pre-wrap;
   font-size: 14px;
   color: #333;
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .answer-reason {
+    font-size: 16px;
+    line-height: 1.8;
+  }
 }
 
 .help-text {
