@@ -30,7 +30,7 @@ export default function GoBoard({
   const boardRef = useRef<HTMLDivElement>(null)
   const [board, setBoard] = useState<any>(null)
   const [isWgoLoaded, setIsWgoLoaded] = useState(false)
-  const clickedMarkLayerRef = useRef<any>(null)
+  const clickedMarkRef = useRef<any>(null)
 
   // WGo.jsの読み込み確認（公式推奨方式）
   useEffect(() => {
@@ -443,6 +443,42 @@ export default function GoBoard({
       }
     })
 
+    // 着手選択マーク用のレイヤを作成して碁盤に追加
+    const addClickedMarkLayer = (xr: number, yr: number) => {
+      const layer = new WGo.Board.CanvasLayer()
+      const sr = boardInstance.stoneRadius
+      const ctx = layer.context
+
+      if (clickedMarkRef.current && clickedMarkRef.current.layer) {
+        boardInstance.removeLayer(clickedMarkRef.current.layer)
+        clickedMarkRef.current.layer = null
+      }
+
+      boardInstance.addLayer(layer, 999)
+      ctx.clearRect(0, 0, layer.element.width, layer.element.height)
+      ctx.beginPath()
+      ctx.arc(xr, yr, sr * 1.3 , 0, 2 * Math.PI)
+      ctx.lineWidth = sr * 0.4
+      ctx.strokeStyle = "rgb(255 255 255 / 60%)"
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(xr, yr, sr, 0, 2 * Math.PI)
+      ctx.lineWidth = sr * 0.4
+      ctx.strokeStyle = "#fff"
+      ctx.stroke()
+
+      clickedMarkRef.current = {x: xr, y: yr, layer: layer}
+    }
+
+    // 着手選択マークを表示
+    if (clickedMarkRef.current) {
+      const coordinate = clickedMarkRef.current.coordinate
+      if (results[coordinate]) {
+        addClickedMarkLayer(clickedMarkRef.current.x, clickedMarkRef.current.y)
+        clickedMarkRef.current.coordinate = coordinate
+      }
+    }
+
     // 以前のクリックハンドラーを削除
     if (resultClickHandlerRef.current) {
       boardInstance.removeEventListener('click', resultClickHandlerRef.current)
@@ -455,28 +491,9 @@ export default function GoBoard({
       if (results[coordinate]) {
         showAnswerDetails(coordinate, results[coordinate])
 
-        if (!clickedMarkLayerRef.current) {
-          // 着手選択マーク用のレイヤを作成
-          clickedMarkLayerRef.current = new WGo.Board.CanvasLayer()
-          boardInstance.addLayer(clickedMarkLayerRef.current, 999)
-        }
-
-        const layer = clickedMarkLayerRef.current
-        const xr = boardInstance.getX(x)
-        const yr = boardInstance.getY(y)
-        const sr = boardInstance.stoneRadius
-        const ctx = layer.context
-        ctx.clearRect(0, 0, layer.element.width, layer.element.height)
-        ctx.beginPath()
-        ctx.arc(xr, yr, sr * 1.3 , 0, 2 * Math.PI)
-        ctx.lineWidth = sr * 0.4
-        ctx.strokeStyle = "rgb(255 255 255 / 60%)"
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.arc(xr, yr, sr, 0, 2 * Math.PI)
-        ctx.lineWidth = sr * 0.4
-        ctx.strokeStyle = "#fff"
-        ctx.stroke()
+        // 着手選択マークを表示
+        addClickedMarkLayer(boardInstance.getX(x), boardInstance.getX(y))
+        clickedMarkRef.current.coordinate = coordinate
 
       } else {
         console.log('No result found for coordinate:', coordinate)
@@ -486,8 +503,6 @@ export default function GoBoard({
     // クリック時の詳細表示
     boardInstance.addEventListener('click', resultClickHandlerRef.current)
   }
-
-
 
   // 座標変換（公式座標システム準拠）
   const sgfToWgoCoords = (sgfCoord: string): { x: number; y: number } => {
