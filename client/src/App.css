@@ -311,7 +311,7 @@ button:hover {
   position: sticky;
   padding: 20px 0;
   top: 0;
-  z-index: 3;
+  z-index: 4;
 }
 
 .board-wrapper .igomon-board-container {
@@ -714,7 +714,7 @@ button:hover {
   .coordinate-wrapper {
     position: sticky;
     top: calc(min(100vw, 390px) - 5px);
-    z-index: 4;
+    z-index: 5;
     padding: 2px 0;
   }
 }
