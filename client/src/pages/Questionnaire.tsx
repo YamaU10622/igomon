@@ -1,6 +1,6 @@
 // client/src/pages/Questionnaire.tsx
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { AnswerForm } from '../components/AnswerForm'
 import { getProblem, submitAnswer, hasUserAnswered } from '../utils/api'
@@ -10,8 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 export function Questionnaire() {
   const { problemId } = useParams<{ problemId: string }>()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { isAuthenticated, checkAuth } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [problem, setProblem] = useState<any>(null)
   const [selectedCoordinate, setSelectedCoordinate] = useState('')
   const [loading, setLoading] = useState(true)
@@ -21,18 +20,14 @@ export function Questionnaire() {
   useEffect(() => {
     if (!problemId) return
 
-    // 認証後のコールバックかチェック
-    if (searchParams.get('authenticated') === 'true') {
-      // 認証後のコールバックの場合、保存した回答データで自動送信
-      handleAuthenticatedCallback()
-    } else if (isAuthenticated) {
+    if (isAuthenticated) {
       // 認証済みの場合、回答済みかチェック
       checkIfAnswered()
     } else {
       // 未認証の場合は問題を読み込む
       loadProblem()
     }
-  }, [problemId, isAuthenticated, searchParams])
+  }, [problemId, isAuthenticated])
 
   const checkIfAnswered = async () => {
     try {
@@ -51,22 +46,6 @@ export function Questionnaire() {
     }
   }
 
-  const handleAuthenticatedCallback = async () => {
-    // セッションから一時保存データを取得して送信
-    try {
-      await checkAuth() // 認証状態を更新
-      // 回答済みかチェック
-      const answered = await hasUserAnswered(parseInt(problemId!))
-      if (answered) {
-        navigate(`/results/${problemId}`, { replace: true })
-      } else {
-        loadProblem()
-      }
-    } catch (err) {
-      console.error('認証後の処理に失敗しました:', err)
-      loadProblem()
-    }
-  }
 
   const loadProblem = async () => {
     try {

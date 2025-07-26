@@ -1,5 +1,6 @@
 // client/src/components/AnswerForm.tsx
 import React, { useEffect, useState } from 'react'
+import { getAuthHeaders } from '../utils/auth'
 
 interface AnswerFormProps {
   selectedCoordinate: string
@@ -16,13 +17,28 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
   const [playerName, setPlayerName] = useState('')
   const [playerRank, setPlayerRank] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
-  // LocalStorageから名前と段位を復元
+  // DBから名前と段位を取得
   useEffect(() => {
-    const savedName = localStorage.getItem('igomon_user_name') || ''
-    const savedRank = localStorage.getItem('igomon_user_rank') || ''
-    setPlayerName(savedName)
-    setPlayerRank(savedRank)
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile', {
+          headers: getAuthHeaders(),
+        })
+        if (response.ok) {
+          const profile = await response.json()
+          setPlayerName(profile.name || '')
+          setPlayerRank(profile.rank || '')
+        }
+      } catch (error) {
+        console.error('プロファイル取得エラー:', error)
+      } finally {
+        setIsLoadingProfile(false)
+      }
+    }
+
+    fetchProfile()
   }, [])
 
   // SGF座標を標準囲碁記法に変換
@@ -63,11 +79,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
       return
     }
 
-    // LocalStorageに保存
-    localStorage.setItem('igomon_user_name', playerName)
-    localStorage.setItem('igomon_user_rank', playerRank)
-
-    // 送信
+    // 送信（DBへの保存はAPIエンドポイント側で行う）
     onSubmit({
       coordinate: selectedCoordinate,
       reason: reason.trim(),
@@ -90,6 +102,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               className={errors.playerName ? 'error' : ''}
+              disabled={isLoadingProfile}
             />
             {errors.playerName && <span className="error-message">{errors.playerName}</span>}
           </div>
@@ -103,6 +116,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
               value={playerRank}
               onChange={(e) => setPlayerRank(e.target.value)}
               className={errors.playerRank ? 'error' : ''}
+              disabled={isLoadingProfile}
             >
               <option value="">段位を選択</option>
               <option value="20級">20級</option>

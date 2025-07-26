@@ -32,6 +32,67 @@ router.post('/auth/register', async (req: Request, res: Response) => {
   }
 })
 
+// ユーザープロファイル取得（認証必須）
+router.get('/profile', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      include: { profile: true },
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' })
+    }
+
+    res.json({
+      name: user.profile?.name || '',
+      rank: user.profile?.rank || '',
+    })
+  } catch (error) {
+    console.error('プロファイル取得エラー:', error)
+    res.status(500).json({ error: 'プロファイルの取得に失敗しました' })
+  }
+})
+
+// ユーザープロファイル更新（認証必須）
+router.put('/profile', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { name, rank } = req.body
+    const userId = req.user!.id
+
+    if (!name || !rank) {
+      return res.status(400).json({ error: '名前と段位は必須です' })
+    }
+
+    // プロファイルが存在するか確認
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+    })
+
+    if (existingProfile) {
+      // 既存のプロファイルを更新
+      await prisma.userProfile.update({
+        where: { userId },
+        data: { name, rank },
+      })
+    } else {
+      // 新規プロファイルを作成
+      await prisma.userProfile.create({
+        data: {
+          userId,
+          name,
+          rank,
+        },
+      })
+    }
+
+    res.json({ success: true, message: 'プロファイルを更新しました' })
+  } catch (error) {
+    console.error('プロファイル更新エラー:', error)
+    res.status(500).json({ error: 'プロファイルの更新に失敗しました' })
+  }
+})
+
 // 回答投稿（セッション認証またはトークン認証）
 router.post('/answers', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -46,6 +107,27 @@ router.post('/answers', requireAuth, async (req: Request, res: Response) => {
         success: true,
         alreadyAnswered: true,
         message: 'この問題には既に回答済みです',
+      })
+    }
+
+    // ユーザープロファイルを更新または作成
+    const userId = req.user!.id
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { userId },
+    })
+
+    if (existingProfile) {
+      await prisma.userProfile.update({
+        where: { userId },
+        data: { name: playerName, rank: playerRank },
+      })
+    } else {
+      await prisma.userProfile.create({
+        data: {
+          userId,
+          name: playerName,
+          rank: playerRank,
+        },
       })
     }
 

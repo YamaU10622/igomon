@@ -15,6 +15,8 @@ declare module 'express-session' {
       name: string
       rank: string
     }
+    redirectToResults?: boolean
+    redirectProblemId?: string
   }
 }
 

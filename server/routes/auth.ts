@@ -63,6 +63,12 @@ router.get('/x', async (req, res) => {
       }
     }
     
+    // 結果ページからのリダイレクトの場合、問題IDを一時保存
+    if (req.query.redirect_to === 'results' && req.query.problem_id) {
+      req.session.redirectToResults = true
+      req.session.redirectProblemId = req.query.problem_id as string
+    }
+    
     // 認可URLのパラメータ
     const params = new URLSearchParams({
       response_type: 'code',
@@ -100,7 +106,7 @@ router.get('/x/callback', async (req, res) => {
   // エラーチェック
   if (error) {
     console.error('認証エラー:', error)
-    return res.redirect('/?error=auth_failed')
+    return res.redirect('/')
   }
   
   // CSRF対策：stateの検証
@@ -136,9 +142,49 @@ router.get('/x/callback', async (req, res) => {
     // 一時保存した回答データがある場合の処理
     if (req.session.pendingAnswer) {
       const answerData = req.session.pendingAnswer
+      delete req.session.pendingAnswer
       
-      // 回答ページへリダイレクト（フロントエンドで回答保存処理を行う）
-      return res.redirect(`/questionnaire/${answerData.problemId}?authenticated=true`)
+      try {
+        // 回答済みかチェック
+        const existingAnswer = await prisma.answer.findFirst({
+          where: {
+            userUuid: user.uuid,
+            problemId: answerData.problemId
+          }
+        })
+        
+        if (!existingAnswer) {
+          // 未回答の場合、回答を保存
+          await prisma.answer.create({
+            data: {
+              userUuid: user.uuid,
+              problemId: answerData.problemId,
+              coordinate: answerData.coordinate,
+              reason: answerData.reason,
+              playerName: answerData.name,
+              playerRank: answerData.rank
+            }
+          })
+        }
+        // 回答済みの場合は回答データを破棄（既に削除済み）
+        
+        // 結果ページへリダイレクト
+        return res.redirect(`/results/${answerData.problemId}`)
+      } catch (error) {
+        console.error('回答保存エラー:', error)
+        // エラーが発生しても結果ページへリダイレクト
+        return res.redirect(`/results/${answerData.problemId}`)
+      }
+    }
+    
+    // 結果ページへのリダイレクトが必要な場合
+    if (req.session.redirectToResults && req.session.redirectProblemId) {
+      const problemId = req.session.redirectProblemId
+      delete req.session.redirectToResults
+      delete req.session.redirectProblemId
+      
+      // 結果ページへリダイレクト
+      return res.redirect(`/results/${problemId}`)
     }
     
     // 通常のログイン完了

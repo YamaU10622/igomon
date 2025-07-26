@@ -1,10 +1,7 @@
-import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 export function LoginButton() {
   const { isAuthenticated, isLoading, login, logout, user } = useAuth()
-
-  console.log('LoginButton - 認証状態:', isAuthenticated, 'ユーザー:', user)
 
   if (isLoading) {
     return null
@@ -27,7 +24,7 @@ export function LoginButton() {
               border: '1px solid #ccc',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontSize: '14px'
+              fontSize: '14px',
             }}
           >
             ログアウト
@@ -43,7 +40,7 @@ export function LoginButton() {
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
-            fontSize: '14px'
+            fontSize: '14px',
           }}
         >
           Xでログイン

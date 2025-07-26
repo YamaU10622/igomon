@@ -71,7 +71,11 @@ export function Home() {
             problems.map((problem) => (
               <Link
                 key={problem.id}
-                to={`/questionnaire/${problem.id}`}
+                to={
+                  problem.deadline && new Date() > new Date(problem.deadline)
+                    ? `/results/${problem.id}`
+                    : `/questionnaire/${problem.id}`
+                }
                 className="problem-card-link"
               >
                 <div className="problem-card">
