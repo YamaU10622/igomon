@@ -35,7 +35,7 @@ const port = process.env.PORT || 3000
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.SITE_URL 
-    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+    : true, // 開発環境では全てのオリジンを許可
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

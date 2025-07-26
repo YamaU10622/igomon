@@ -26,13 +26,8 @@ export function Results() {
 
     // 認証されていない場合は自動的にログインページへ
     if (!isAuthenticated) {
-      // 現在のホストがlocalhostの場合、127.0.0.1にリダイレクト
-      const currentHost = window.location.hostname
-      if (currentHost === 'localhost') {
-        window.location.href = 'http://127.0.0.1:5173/auth/x'
-      } else {
-        window.location.href = '/auth/x'
-      }
+      // 認証ページへリダイレクト
+      window.location.href = '/auth/x'
       return
     }
 

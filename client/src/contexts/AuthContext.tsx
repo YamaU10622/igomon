@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 interface User {
   id: number
@@ -28,9 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const response = await fetch('/auth/me', {
-        credentials: 'include'
+        credentials: 'include',
       })
-      
+
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
@@ -52,16 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ログイン（X認証へリダイレクト）
   const login = () => {
-    console.log('ログインボタンがクリックされました')
-    // 現在のホストがlocalhostの場合、127.0.0.1にリダイレクト
-    const currentHost = window.location.hostname
-    if (currentHost === 'localhost') {
-      console.log('localhostから127.0.0.1にリダイレクト')
-      window.location.href = 'http://127.0.0.1:5173/auth/x'
-    } else {
-      console.log('リダイレクト先:', '/auth/x')
-      window.location.href = '/auth/x'
-    }
+    window.location.href = '/auth/x'
   }
 
   // ログアウト
@@ -69,9 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
       })
-      
+
       if (response.ok) {
         setUser(null)
         window.location.href = '/'
@@ -87,14 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     login,
     logout,
-    checkAuth
+    checkAuth,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

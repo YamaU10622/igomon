@@ -7,29 +7,30 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    allowedHosts: ['dev.igomon.net', 'localhost', '127.0.0.1'],
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         changeOrigin: true
       },
       '/auth': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         changeOrigin: true
       },
       '/socket.io': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         ws: true
       },
       '/ogp': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         changeOrigin: true
       },
       '/placeholder-board.png': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         changeOrigin: true
       },
       '/wgo': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://dev.igomon.net:3000',
         changeOrigin: true
       }
     }
