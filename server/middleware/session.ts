@@ -12,8 +12,8 @@ declare module 'express-session' {
       problemId: number
       coordinate: string
       reason: string
-      name: string
-      rank: string
+      playerName: string
+      playerRank: string
     }
     redirectToResults?: boolean
     redirectProblemId?: string
@@ -33,9 +33,9 @@ const sessionConfig: SessionOptions = {
     maxAge: 24 * 60 * 60 * 1000, // 24時間
     sameSite: 'lax', // CSRF対策
     path: '/', // 全パスで有効
-    domain: undefined // ドメインを指定しない（自動検出）
+    domain: undefined, // ドメインを指定しない（自動検出）
   },
-  name: 'igomon.sid' // セッションクッキーの名前を指定
+  name: 'igomon.sid', // セッションクッキーの名前を指定
 }
 
 // セッションミドルウェアをエクスポート

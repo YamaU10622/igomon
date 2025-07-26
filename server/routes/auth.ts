@@ -9,41 +9,9 @@ const prisma = new PrismaClient()
 // 環境変数の取得
 const CLIENT_ID = process.env.X_CLIENT_ID || ''
 const CLIENT_SECRET = process.env.X_CLIENT_SECRET || ''
-
-// 開発環境と本番環境でリダイレクトURIを切り替える
-const getRedirectUri = (req?: express.Request) => {
-  // 環境変数が明示的に設定されている場合
-  if (process.env.X_REDIRECT_URI) {
-    // 開発環境では、リクエストのホストに合わせて動的に調整
-    if (process.env.NODE_ENV !== 'production' && req) {
-      const origin = req.get('origin') || req.get('referer')
-      if (origin) {
-        const url = new URL(origin)
-        // dev.igomon.netやlocalhostなど、どちらからでも動作するように
-        return `${url.protocol}//${url.host}/auth/x/callback`
-      }
-    }
-    // 本番環境または調整できない場合は環境変数をそのまま使用
-    return process.env.X_REDIRECT_URI
-  }
-
-  // デフォルトはlocalhost
-  return 'http://localhost:5173/auth/x/callback'
-}
-
 const AUTH_URL = 'https://twitter.com/i/oauth2/authorize'
 const TOKEN_URL = 'https://api.twitter.com/2/oauth2/token'
 const USER_URL = 'https://api.twitter.com/2/users/me'
-
-// PKCE用のcode_verifierとcode_challengeを生成する関数
-function generatePKCEChallenge() {
-  const code_verifier = crypto.randomBytes(32).toString('base64url')
-  const challenge = crypto.createHash('sha256').update(code_verifier).digest('base64url')
-  return {
-    code_verifier,
-    code_challenge: challenge,
-  }
-}
 
 // Step 1: 認証開始エンドポイント
 router.get('/x', async (req, res) => {
@@ -58,22 +26,11 @@ router.get('/x', async (req, res) => {
     req.session.codeVerifier = code_verifier
     req.session.state = state
 
-    // セッション保存を確実にする
-    await new Promise<void>((resolve, reject) => {
-      req.session.save((err) => {
-        if (err) {
-          console.error('セッション保存エラー:', err)
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-    })
-
     // 回答ページからのリダイレクトの場合、回答データを一時保存
     if (req.query.answer_data) {
       try {
-        req.session.pendingAnswer = JSON.parse(req.query.answer_data as string)
+        const answerData = JSON.parse(req.query.answer_data as string)
+        req.session.pendingAnswer = answerData
       } catch (e) {
         console.error('回答データのパースエラー:', e)
       }
@@ -90,6 +47,18 @@ router.get('/x', async (req, res) => {
       req.session.redirectToResults = true
       req.session.redirectProblemId = req.query.problem_id as string
     }
+
+    // セッション保存を確実にする
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('セッション保存エラー:', err)
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
 
     // 認可URLのパラメータ
     const redirectUri = getRedirectUri(req)
@@ -156,14 +125,37 @@ router.get('/x/callback', async (req, res) => {
     req.session.userId = user.id
     req.session.xUserId = userData.id
 
+    // セッション保存を確実にする
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('セッション保存エラー（コールバック）:', err)
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
+
+    // 一時データの取得（削除前に取得）
+    const pendingAnswer = req.session.pendingAnswer
+    const fromQuestionnaire = req.session.fromQuestionnaire
+    const questionnaireProblemId = req.session.questionnaireProblemId
+    const redirectToResults = req.session.redirectToResults
+    const redirectProblemId = req.session.redirectProblemId
+
     // セッションの一時データをクリーンアップ
     delete req.session.codeVerifier
     delete req.session.state
+    delete req.session.pendingAnswer
+    delete req.session.fromQuestionnaire
+    delete req.session.questionnaireProblemId
+    delete req.session.redirectToResults
+    delete req.session.redirectProblemId
 
     // 一時保存した回答データがある場合の処理
-    if (req.session.pendingAnswer) {
-      const answerData = req.session.pendingAnswer
-      delete req.session.pendingAnswer
+    if (pendingAnswer) {
+      const answerData = pendingAnswer
 
       try {
         // 回答済みかチェック
@@ -174,7 +166,10 @@ router.get('/x/callback', async (req, res) => {
           },
         })
 
-        if (!existingAnswer) {
+        if (existingAnswer) {
+          // 回答済みの場合は結果ページへリダイレクト
+          return res.redirect(`/results/${answerData.problemId}`)
+        } else {
           // 未回答の場合、回答を保存
           await prisma.answer.create({
             data: {
@@ -182,27 +177,24 @@ router.get('/x/callback', async (req, res) => {
               problemId: answerData.problemId,
               coordinate: answerData.coordinate,
               reason: answerData.reason,
-              playerName: answerData.name,
-              playerRank: answerData.rank,
+              playerName: answerData.playerName || '',
+              playerRank: answerData.playerRank || '',
             },
           })
-        }
-        // 回答済みの場合は回答データを破棄（既に削除済み）
 
-        // 結果ページへリダイレクト
-        return res.redirect(`/results/${answerData.problemId}`)
+          // 回答保存後、結果ページへリダイレクト
+          return res.redirect(`/results/${answerData.problemId}`)
+        }
       } catch (error) {
         console.error('回答保存エラー:', error)
-        // エラーが発生しても結果ページへリダイレクト
-        return res.redirect(`/results/${answerData.problemId}`)
+        // エラーが発生した場合は回答ページへ戻る
+        return res.redirect(`/questionnaire/${answerData.problemId}`)
       }
     }
 
     // 回答ページからログインボタンでログインした場合
-    if (req.session.fromQuestionnaire && req.session.questionnaireProblemId) {
-      const problemId = parseInt(req.session.questionnaireProblemId)
-      delete req.session.fromQuestionnaire
-      delete req.session.questionnaireProblemId
+    if (fromQuestionnaire && questionnaireProblemId) {
+      const problemId = parseInt(questionnaireProblemId)
 
       try {
         // 回答済みかチェック
@@ -228,10 +220,8 @@ router.get('/x/callback', async (req, res) => {
     }
 
     // 結果ページへのリダイレクトが必要な場合
-    if (req.session.redirectToResults && req.session.redirectProblemId) {
-      const problemId = req.session.redirectProblemId
-      delete req.session.redirectToResults
-      delete req.session.redirectProblemId
+    if (redirectToResults && redirectProblemId) {
+      const problemId = redirectProblemId
 
       // 結果ページへリダイレクト
       return res.redirect(`/results/${problemId}`)
@@ -243,6 +233,72 @@ router.get('/x/callback', async (req, res) => {
     res.status(500).send('認証処理中にエラーが発生しました')
   }
 })
+
+// 現在のユーザー情報取得エンドポイント
+router.get('/me', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: '認証が必要です' })
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.session.userId },
+      include: { profile: true },
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' })
+    }
+
+    // BANチェック
+    if (user.isBanned) {
+      req.session.destroy((err) => {
+        if (err) console.error('セッション削除エラー:', err)
+      })
+      return res.status(401).json({ error: '認証が必要です' })
+    }
+
+    res.json({
+      id: user.id,
+      xUserId: user.xUserId,
+      profile: user.profile,
+    })
+  } catch (error) {
+    console.error('ユーザー情報取得エラー:', error)
+    res.status(500).json({ error: 'ユーザー情報の取得に失敗しました' })
+  }
+})
+
+// ログアウトエンドポイント
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'ログアウトに失敗しました' })
+    }
+    res.json({ success: true })
+  })
+})
+
+// 開発環境と本番環境でリダイレクトURIを切り替える
+const getRedirectUri = (req?: express.Request) => {
+  // 環境変数が明示的に設定されている場合
+  if (process.env.X_REDIRECT_URI) {
+    return process.env.X_REDIRECT_URI
+  }
+
+  // 環境変数が設定されていない場合はエラーを投げる
+  throw new Error('X_REDIRECT_URI環境変数が設定されていません')
+}
+
+// PKCE用のcode_verifierとcode_challengeを生成する関数
+function generatePKCEChallenge() {
+  const code_verifier = crypto.randomBytes(32).toString('base64url')
+  const challenge = crypto.createHash('sha256').update(code_verifier).digest('base64url')
+  return {
+    code_verifier,
+    code_challenge: challenge,
+  }
+}
 
 // トークン交換関数
 async function exchangeCodeForToken(code: string, codeVerifier: string, redirectUri: string) {
@@ -365,50 +421,5 @@ export async function refreshAccessToken(refreshToken: string) {
 
   return await response.body.json()
 }
-
-// ログアウトエンドポイント
-router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'ログアウトに失敗しました' })
-    }
-    res.json({ success: true })
-  })
-})
-
-// 現在のユーザー情報取得エンドポイント
-router.get('/me', async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: '認証が必要です' })
-  }
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.session.userId },
-      include: { profile: true },
-    })
-
-    if (!user) {
-      return res.status(404).json({ error: 'ユーザーが見つかりません' })
-    }
-
-    // BANチェック
-    if (user.isBanned) {
-      req.session.destroy((err) => {
-        if (err) console.error('セッション削除エラー:', err)
-      })
-      return res.status(401).json({ error: '認証が必要です' })
-    }
-
-    res.json({
-      id: user.id,
-      xUserId: user.xUserId,
-      profile: user.profile,
-    })
-  } catch (error) {
-    console.error('ユーザー情報取得エラー:', error)
-    res.status(500).json({ error: 'ユーザー情報の取得に失敗しました' })
-  }
-})
 
 export default router
