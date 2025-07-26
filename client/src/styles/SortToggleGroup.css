@@ -3,7 +3,7 @@
   position: absolute;
   bottom: 0rem; /* 下端をanswer-list の上端に合わせる */
   display: flex;
-  gap: 0;
+  gap: 0.3rem;
   align-items: flex-end;
   z-index: 1;
 }
