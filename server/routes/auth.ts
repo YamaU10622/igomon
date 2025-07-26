@@ -146,6 +146,12 @@ router.get('/x/callback', async (req, res) => {
     // ユーザーの作成または更新
     const user = await createOrUpdateUser(userData, tokenData)
 
+    // BANチェック
+    if (user.isBanned) {
+      // BANされている場合はセッションを作成しない
+      return res.redirect('/?error=auth_failed')
+    }
+
     // セッションにユーザー情報を保存
     req.session.userId = user.id
     req.session.xUserId = userData.id
@@ -384,6 +390,14 @@ router.get('/me', async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ error: 'ユーザーが見つかりません' })
+    }
+
+    // BANチェック
+    if (user.isBanned) {
+      req.session.destroy((err) => {
+        if (err) console.error('セッション削除エラー:', err)
+      })
+      return res.status(401).json({ error: '認証が必要です' })
     }
 
     res.json({

@@ -31,6 +31,15 @@ export function requireAuth(
     where: { id: req.session.userId }
   }).then(user => {
     if (user) {
+      // BANチェック
+      if (user.isBanned) {
+        req.session.destroy((err) => {
+          if (err) console.error('セッション削除エラー:', err)
+          res.status(401).json({ error: '認証が必要です' })
+        })
+        return
+      }
+      
       req.user = {
         id: user.id,
         uuid: user.uuid,
@@ -57,6 +66,16 @@ export function optionalAuth(
       where: { id: req.session.userId }
     }).then(user => {
       if (user) {
+        // BANチェック
+        if (user.isBanned) {
+          req.session.destroy((err) => {
+            if (err) console.error('セッション削除エラー:', err)
+          })
+          // BANされている場合はreq.userを設定しない
+          next()
+          return
+        }
+        
         req.user = {
           id: user.id,
           uuid: user.uuid,
@@ -91,6 +110,11 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
       return res.status(401).json({ error: '無効なトークンです' })
     }
 
+    // BANチェック
+    if (user.isBanned) {
+      return res.status(401).json({ error: '認証が必要です' })
+    }
+
     req.user = {
       id: user.id,
       uuid: user.uuid,
@@ -118,6 +142,12 @@ export async function optionalAuthenticateToken(req: Request, res: Response, nex
     })
 
     if (user) {
+      // BANチェック
+      if (user.isBanned) {
+        // BANされている場合はreq.userを設定しない
+        return next()
+      }
+      
       req.user = {
         id: user.id,
         uuid: user.uuid,

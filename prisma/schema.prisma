@@ -29,6 +29,8 @@ model User {
   xAccessToken    String?  @map("x_access_token")
   xRefreshToken   String?  @map("x_refresh_token")
   xTokenExpiresAt DateTime? @map("x_token_expires_at")
+  isBanned        Boolean  @default(false) @map("is_banned")
+  bannedReason    String?  @map("banned_reason")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   
