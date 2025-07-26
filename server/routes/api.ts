@@ -5,7 +5,7 @@ import { saveAnswer, getResults, deleteAnswer, hasUserAnswered } from '../../lib
 import { loadProblemFromDirectory } from '../utils/problem-loader'
 import { createProblem } from '../../src/app/api/problems/create/route'
 import prisma from '../../lib/database'
-import { authenticateToken, optionalAuthenticateToken } from '../middleware/auth'
+import { requireAuth, optionalAuth, authenticateToken, optionalAuthenticateToken } from '../middleware/auth'
 
 const router = express.Router() as any
 
@@ -32,8 +32,8 @@ router.post('/auth/register', async (req: Request, res: Response) => {
   }
 })
 
-// 回答投稿（認証必須）
-router.post('/answers', authenticateToken, async (req: Request, res: Response) => {
+// 回答投稿（セッション認証またはトークン認証）
+router.post('/answers', requireAuth, async (req: Request, res: Response) => {
   try {
     const { problemId, coordinate, reason, playerName, playerRank } = req.body
     const userUuid = req.user!.uuid // 認証ミドルウェアで設定されたユーザー情報から取得
@@ -65,10 +65,10 @@ router.post('/answers', authenticateToken, async (req: Request, res: Response) =
   }
 })
 
-// 結果取得（認証は任意）
+// 結果取得（認証必須）
 router.get(
   '/results/:problemId',
-  optionalAuthenticateToken,
+  requireAuth,
   async (req: Request, res: Response) => {
     try {
       const problemId = parseInt(req.params.problemId)
@@ -103,7 +103,7 @@ router.get(
 )
 
 // 回答削除（認証必須）
-router.delete('/answers/:answerId', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/answers/:answerId', requireAuth, async (req: Request, res: Response) => {
   try {
     const answerId = parseInt(req.params.answerId)
     const userUuid = req.user!.uuid // 認証ミドルウェアで設定されたユーザー情報から取得
@@ -207,7 +207,7 @@ router.get('/sgf/:problemId', (req: Request, res: Response) => {
 // ユーザーが問題に回答済みかチェック（認証必須）
 router.get(
   '/problems/:problemId/answered',
-  authenticateToken,
+  requireAuth,
   async (req: Request, res: Response) => {
     try {
       const problemId = parseInt(req.params.problemId)

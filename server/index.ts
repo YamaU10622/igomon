@@ -1,4 +1,7 @@
 // server/index.ts
+import dotenv from 'dotenv'
+dotenv.config()
+
 // 開発環境でもタイムゾーンを日本時間に設定
 if (!process.env.TZ) {
   process.env.TZ = 'Asia/Tokyo'
@@ -10,6 +13,8 @@ import { Server as SocketIOServer } from 'socket.io'
 import cors from 'cors'
 import path from 'path'
 import apiRoutes from './routes/api'
+import authRoutes from './routes/auth'
+import { sessionMiddleware } from './middleware/session'
 import { ProblemWatcher } from './utils/file-watcher'
 import { loadProblemFromDirectory } from './utils/problem-loader'
 import { generateProblemHTML } from './utils/html-generator'
@@ -27,7 +32,15 @@ const io = new SocketIOServer(server, {
 const port = process.env.PORT || 3000
 
 // ミドルウェア
-app.use(cors())
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.SITE_URL 
+    : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+app.use(sessionMiddleware)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -53,6 +66,7 @@ app.use('/ogp', express.static(path.join(rootDir, 'public/ogp')))
 
 // API ルート
 app.use('/api', apiRoutes)
+app.use('/auth', authRoutes)
 
 // WebSocket接続処理
 io.on('connection', async (socket) => {
@@ -139,6 +153,7 @@ process.on('SIGTERM', () => {
   server.close()
 })
 
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`)
+const portNumber = typeof port === 'string' ? parseInt(port) : port
+server.listen(portNumber, '127.0.0.1', () => {
+  console.log(`Server running on http://127.0.0.1:${portNumber}`)
 })

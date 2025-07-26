@@ -3,10 +3,13 @@ import { useEffect, useState } from 'react'
 import { useRealTimeProblems } from '../hooks/useRealTimeProblems'
 import { Link } from 'react-router-dom'
 import { hasUserAnswered } from '../utils/api'
+import { LoginButton } from '../components/LoginButton'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
   const [answeredMap, setAnsweredMap] = useState<{ [problemId: number]: boolean }>({})
+  const { isAuthenticated } = useAuth()
 
   // 日付をフォーマット（YYYY.MM.DD形式）
   const formatDate = (dateInput: string | Date) => {
@@ -20,6 +23,12 @@ export function Home() {
   // ユーザーが回答済みかどうかを問題ごとにチェック
   useEffect(() => {
     const checkHasUserAnswered = async () => {
+      // 認証されていない場合はチェックしない
+      if (!isAuthenticated) {
+        setAnsweredMap({})
+        return
+      }
+
       const results = await Promise.all(
         problems.map(async (problem) => {
           const hasAnswered = await hasUserAnswered(problem.id)
@@ -38,10 +47,11 @@ export function Home() {
     if (problems.length > 0) {
       checkHasUserAnswered()
     }
-  }, [problems])
+  }, [problems, isAuthenticated])
 
   return (
     <div className="home-page">
+      <LoginButton />
       <header>
         <h1>いごもん</h1>
         <div className="connection-status">

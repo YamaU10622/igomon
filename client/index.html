@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>いごもん</title>
+    <!-- 開発環境でlocalhostアクセスを127.0.0.1にリダイレクト -->
+    <script>
+      if (window.location.hostname === 'localhost' && window.location.port === '5173') {
+        window.location.href = 'http://127.0.0.1:5173' + window.location.pathname + window.location.search + window.location.hash;
+      }
+    </script>
     <!-- WGo.js公式推奨の読み込み方法 -->
     <script type="text/javascript" src="/wgo/wgo.min.js"></script>
     <!-- プレイヤー機能は使用しないためコメントアウト -->

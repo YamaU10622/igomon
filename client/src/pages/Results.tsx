@@ -5,10 +5,12 @@ import GoBoard from '../components/GoBoard'
 import { ResultsDisplay } from '../components/ResultsDisplay'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
 import { RANKS } from '../utils/rankUtils'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Results() {
   const { problemId } = useParams<{ problemId: string }>()
   const navigate = useNavigate()
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth()
   const [problem, setProblem] = useState<any>(null)
   const [results, setResults] = useState<Record<string, { votes: number; answers: any[] }>>({})
   const [allResults, setAllResults] = useState<Record<string, { votes: number; answers: any[] }>>(
@@ -20,10 +22,22 @@ export function Results() {
   const [maxRank, setMaxRank] = useState(RANKS.length - 1)
 
   useEffect(() => {
-    if (!problemId) return
+    if (!problemId || authLoading) return
+
+    // 認証されていない場合は自動的にログインページへ
+    if (!isAuthenticated) {
+      // 現在のホストがlocalhostの場合、127.0.0.1にリダイレクト
+      const currentHost = window.location.hostname
+      if (currentHost === 'localhost') {
+        window.location.href = 'http://127.0.0.1:5173/auth/x'
+      } else {
+        window.location.href = '/auth/x'
+      }
+      return
+    }
 
     checkAnswerStatus()
-  }, [problemId])
+  }, [problemId, isAuthenticated, authLoading])
 
   const checkAnswerStatus = async () => {
     try {
@@ -133,7 +147,7 @@ export function Results() {
     setMaxRank(max)
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return <div className="loading">読み込み中...</div>
   }
 
@@ -142,6 +156,11 @@ export function Results() {
       <div className="error-page">
         <h2>エラー</h2>
         <p>{error}</p>
+        {!isAuthenticated && (
+          <button onClick={login} style={{ marginRight: '10px' }}>
+            ログイン
+          </button>
+        )}
         <button onClick={() => navigate('/')}>トップへ戻る</button>
       </div>
     )
