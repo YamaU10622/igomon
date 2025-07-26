@@ -58,17 +58,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ログアウト
   const logout = async () => {
     try {
-      // 先にトップページへリダイレクトしてから、バックグラウンドでログアウト処理を実行
-      window.location.replace('/')
+      // 現在のパスを確認
+      const currentPath = window.location.pathname
+      const isQuestionnairePage = currentPath.includes('/questionnaire/')
       
-      await fetch('/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
+      // 回答ページの場合は、ログアウト処理を行いステートを更新するだけ
+      if (isQuestionnairePage) {
+        const response = await fetch('/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        })
+
+        if (response.ok) {
+          setUser(null)
+          // ページ遷移はしない（回答ページに留まる）
+        }
+      } else {
+        // それ以外のページ（結果ページなど）では、即座にトップページへ遷移
+        window.location.replace('/')
+        
+        // バックグラウンドでログアウト処理
+        fetch('/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+        })
+      }
     } catch (error) {
       console.error('ログアウトエラー:', error)
-      // エラーが発生してもトップページへリダイレクト
-      window.location.replace('/')
+      // エラーが発生した場合も同様の処理
+      const currentPath = window.location.pathname
+      const isQuestionnairePage = currentPath.includes('/questionnaire/')
+      
+      if (!isQuestionnairePage) {
+        window.location.replace('/')
+      }
     }
   }
 

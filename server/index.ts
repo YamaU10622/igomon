@@ -33,12 +33,22 @@ const port = process.env.PORT || 3000
 
 // ミドルウェア
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.SITE_URL 
-    : true, // 開発環境では全てのオリジンを許可
+  origin: (origin, callback) => {
+    // 開発環境では柔軟に対応
+    if (process.env.NODE_ENV !== 'production') {
+      // 開発環境では全てのオリジンを許可
+      callback(null, true)
+    } else if (!origin || origin === process.env.SITE_URL) {
+      // 本番環境では設定されたURLのみ許可
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
 }))
 app.use(sessionMiddleware)
 app.use(express.json())

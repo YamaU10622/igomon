@@ -28,12 +28,12 @@ const sessionConfig: SessionOptions = {
   resave: true, // セッションを常に再保存
   saveUninitialized: true, // セッションを確実に保存
   cookie: {
-    secure: false, // 開発環境ではHTTPでも動作するように
+    secure: process.env.NODE_ENV === 'production', // 本番環境でのみHTTPS必須
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24時間
     sameSite: 'lax', // CSRF対策
     path: '/', // 全パスで有効
-    domain: undefined // ドメインを指定しない
+    domain: undefined // ドメインを指定しない（自動検出）
   },
   name: 'igomon.sid' // セッションクッキーの名前を指定
 }
