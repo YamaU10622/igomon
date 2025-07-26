@@ -1,9 +1,3 @@
--- AlterTable
-ALTER TABLE "users" ADD COLUMN "x_user_id" TEXT;
-ALTER TABLE "users" ADD COLUMN "x_access_token" TEXT;
-ALTER TABLE "users" ADD COLUMN "x_refresh_token" TEXT;
-ALTER TABLE "users" ADD COLUMN "x_token_expires_at" DATETIME;
-
 -- CreateTable
 CREATE TABLE "user_profiles" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -16,10 +10,4 @@ CREATE TABLE "user_profiles" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_x_user_id_key" ON "users"("x_user_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "user_profiles_user_id_key" ON "user_profiles"("user_id");
-
--- AddForeignKey
--- SQLiteでは外部キー制約はテーブル作成時に定義済みのため、この行は不要

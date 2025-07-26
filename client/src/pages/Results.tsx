@@ -39,12 +39,12 @@ export function Results() {
     try {
       // まず問題データを取得して期限を確認
       const problemData = await getProblem(problemId!)
-      
+
       // 期限チェック
       if (problemData.deadline) {
         const now = new Date()
         const deadlineDate = new Date(problemData.deadline)
-        
+
         if (now >= deadlineDate) {
           // 期限切れの場合は回答状態に関わらず結果を表示
           setProblem(problemData)
@@ -52,7 +52,7 @@ export function Results() {
           return
         }
       }
-      
+
       // 期限内の場合、ユーザーが回答済みかチェック
       const answered = await hasUserAnswered(parseInt(problemId!))
 
@@ -66,12 +66,16 @@ export function Results() {
       setProblem(problemData)
       loadResultsOnly()
     } catch (err) {
-      console.error('回答状態の確認に失敗しました:', err)
+      console.error('回答状態の確認に失敗しました - 詳細:', err)
+      if (err instanceof Error) {
+        console.error('エラーメッセージ:', err.message)
+        console.error('エラースタック:', err.stack)
+      }
       setError('回答状態の確認に失敗しました')
       setLoading(false)
     }
   }
-  
+
   const loadResultsOnly = async () => {
     try {
       setLoading(true)
@@ -80,7 +84,7 @@ export function Results() {
       filterResults(resultsData, minRank, maxRank)
     } catch (err) {
       setError('結果の読み込みに失敗しました')
-      console.error(err)
+      console.error('結果取得エラー:', err)
     } finally {
       setLoading(false)
     }
@@ -152,6 +156,10 @@ export function Results() {
       <div className="error-page">
         <h2>エラー</h2>
         <p>{error}</p>
+        <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+          <p>認証状態: {isAuthenticated ? 'ログイン済み' : '未ログイン'}</p>
+          <p>問題ID: {problemId}</p>
+        </div>
         {!isAuthenticated && (
           <button onClick={login} style={{ marginRight: '10px' }}>
             ログイン

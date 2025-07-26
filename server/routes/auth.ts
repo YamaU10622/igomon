@@ -109,11 +109,53 @@ router.get('/x/callback', async (req, res) => {
     const redirectUri = getRedirectUri(req)
     const tokenData = await exchangeCodeForToken(code as string, codeVerifier, redirectUri)
 
-    // ユーザー情報の取得
-    const userData = await fetchUserInfo(tokenData.access_token)
+    // JWTトークンからユーザーIDを抽出してみる
+    let user = null
+    let userData = null
 
-    // ユーザーの作成または更新
-    const user = await createOrUpdateUser(userData, tokenData)
+    // アクセストークンからユーザーIDを推定してみる
+    // X OAuth2のトークン形式: [base64]:[timestamp]:[version]:[type]:[userId]
+    const tokenParts = tokenData.access_token.split(':')
+    if (tokenParts.length >= 5) {
+      // トークンからuserIdを抽出できる可能性
+      const possibleUserId = tokenParts[tokenParts.length - 1]
+
+      // 既存ユーザーのチェック
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { xUserId: possibleUserId },
+            // セッションにxUserIdがある場合
+            ...(req.session.xUserId ? [{ xUserId: req.session.xUserId }] : []),
+          ],
+        },
+      })
+
+      if (existingUser) {
+        // トークン情報のみ更新
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            xAccessToken: tokenData.access_token,
+            xRefreshToken: tokenData.refresh_token,
+            xTokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
+          },
+        })
+        userData = {
+          id: existingUser.xUserId!,
+          username: 'cached',
+          name: 'cached',
+        }
+      }
+    }
+
+    // ユーザーが見つからなかった場合のみAPIを呼び出す
+    if (!user) {
+      userData = await fetchUserInfo(tokenData.access_token)
+
+      // ユーザーの作成または更新
+      user = await createOrUpdateUser(userData, tokenData)
+    }
 
     // BANチェック
     if (user.isBanned) {
@@ -123,7 +165,7 @@ router.get('/x/callback', async (req, res) => {
 
     // セッションにユーザー情報を保存
     req.session.userId = user.id
-    req.session.xUserId = userData.id
+    req.session.xUserId = user.xUserId || undefined
 
     // セッション保存を確実にする
     await new Promise<void>((resolve, reject) => {
@@ -187,8 +229,8 @@ router.get('/x/callback', async (req, res) => {
         }
       } catch (error) {
         console.error('回答保存エラー:', error)
-        // エラーが発生した場合は回答ページへ戻る
-        return res.redirect(`/questionnaire/${answerData.problemId}`)
+        // エラーが発生した場合も結果ページへリダイレクト（エラーメッセージは結果ページで表示）
+        return res.redirect(`/results/${answerData.problemId}`)
       }
     }
 
@@ -230,7 +272,16 @@ router.get('/x/callback', async (req, res) => {
     // 通常のログイン完了
     res.redirect('/')
   } catch (error) {
-    res.status(500).send('認証処理中にエラーが発生しました')
+    console.error('X認証コールバックエラー:', error)
+
+    // エラーの種類に応じて適切なリダイレクト
+    if (error instanceof Error && error.message.includes('24時間ユーザー制限')) {
+      return res.redirect('/?error=daily_limit')
+    } else if (error instanceof Error && error.message.includes('レート制限')) {
+      return res.redirect('/?error=rate_limit')
+    } else {
+      return res.redirect('/?error=auth_failed')
+    }
   }
 })
 
@@ -338,23 +389,77 @@ async function exchangeCodeForToken(code: string, codeVerifier: string, redirect
   }
 }
 
-// ユーザー情報取得関数
-async function fetchUserInfo(accessToken: string) {
-  const response = await request(USER_URL, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
+// ユーザー情報取得関数（リトライ機能付き）
+async function fetchUserInfo(
+  accessToken: string,
+  retryCount = 0,
+): Promise<{ id: string; username: string; name: string }> {
+  try {
+    const response = await request(USER_URL, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
 
-  if (response.statusCode !== 200) {
-    const error = await response.body.text()
-    throw new Error(`Failed to fetch user info: ${error}`)
-  }
+    if (response.statusCode === 429) {
+      // レート制限エラーの場合
+      const rateLimitReset = response.headers['x-rate-limit-reset']
+      const resetTime = rateLimitReset
+        ? new Date(
+            parseInt(Array.isArray(rateLimitReset) ? rateLimitReset[0] : rateLimitReset) * 1000,
+          )
+        : null
+      // 24時間ユーザー制限のチェック
+      const userLimit24h = response.headers['x-user-limit-24hour-remaining']
+      const userLimit24hReset = response.headers['x-user-limit-24hour-reset']
 
-  const result = (await response.body.json()) as {
-    data: { id: string; username: string; name: string }
+      const userLimitValue = Array.isArray(userLimit24h) ? userLimit24h[0] : userLimit24h
+      if (userLimitValue === '0' || userLimitValue === undefined) {
+        const resetTime24h = userLimit24hReset
+          ? new Date(
+              parseInt(
+                Array.isArray(userLimit24hReset) ? userLimit24hReset[0] : userLimit24hReset,
+              ) * 1000,
+            )
+          : null
+        console.error(
+          'X API 24時間ユーザー制限に達しました。リセット時刻:',
+          resetTime24h?.toLocaleString('ja-JP'),
+        )
+        throw new Error(
+          `X APIの24時間ユーザー制限に達しました。${resetTime24h?.toLocaleString('ja-JP') || '明日'}まで待ってください。`,
+        )
+      }
+
+      if (retryCount < 3) {
+        const waitTime = Math.pow(2, retryCount + 2) // 4秒, 8秒, 16秒
+        await new Promise((resolve) => setTimeout(resolve, waitTime * 1000))
+        return fetchUserInfo(accessToken, retryCount + 1)
+      }
+      throw new Error('X APIのレート制限に達しました。しばらく待ってから再度お試しください。')
+    }
+
+    if (response.statusCode === 401) {
+      const error = await response.body.text()
+      console.error('X API 認証エラー (401):', error)
+      console.error('使用したアクセストークン:', accessToken)
+      throw new Error('X API認証エラー: アクセストークンが無効です')
+    }
+
+    if (response.statusCode !== 200) {
+      const error = await response.body.text()
+      console.error('X API エラー:', response.statusCode, error)
+      throw new Error(`X APIエラー: ${response.statusCode}`)
+    }
+
+    const result = (await response.body.json()) as {
+      data: { id: string; username: string; name: string }
+    }
+    return result.data
+  } catch (error) {
+    console.error('ユーザー情報取得エラー:', error)
+    throw error
   }
-  return result.data
 }
 
 // ユーザー作成/更新関数
@@ -380,11 +485,10 @@ async function createOrUpdateUser(
     return updatedUser
   }
 
-  // 新規ユーザー作成（uuid と authToken は一時的に生成）
+  // 新規ユーザー作成
   const newUser = await prisma.user.create({
     data: {
       uuid: crypto.randomUUID(),
-      authToken: crypto.randomBytes(32).toString('hex'),
       xUserId: xUserData.id,
       xAccessToken: tokenData.access_token,
       xRefreshToken: tokenData.refresh_token,

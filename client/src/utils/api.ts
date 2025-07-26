@@ -1,5 +1,4 @@
 // client/src/utils/api.ts
-import { getUserUuid } from './uuid'
 import { fetchWithAuth } from './api-helper'
 
 export async function submitAnswer(answerData: {
@@ -39,14 +38,18 @@ export async function getResults(problemId: number) {
   const url = `/api/results/${problemId}`
 
   const response = await fetchWithAuth(url)
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+    console.error('結果API エラー:', errorData)
     if (errorData.error) {
       throw new Error(errorData.error)
     }
     throw new Error('Failed to get results')
   }
-  return response.json()
+
+  const data = await response.json()
+  return data
 }
 
 export async function deleteAnswer(answerId: number) {
@@ -54,7 +57,7 @@ export async function deleteAnswer(answerId: number) {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-    }
+    },
   })
 
   if (!response.ok) {
@@ -93,12 +96,21 @@ export async function getProblem(problemId: string) {
 }
 
 export async function hasUserAnswered(problemId: number): Promise<boolean> {
-  const response = await fetchWithAuth(`/api/problems/${problemId}/answered`)
-  if (!response.ok) {
-    return false
+  try {
+    const response = await fetchWithAuth(`/api/problems/${problemId}/answered`)
+
+    if (!response.ok) {
+      console.error('hasUserAnswered エラー - ステータス:', response.status)
+      const errorText = await response.text()
+      console.error('エラー内容:', errorText)
+      return false
+    }
+    const data = await response.json()
+    return data.answered
+  } catch (err) {
+    console.error('hasUserAnswered 例外:', err)
+    throw err
   }
-  const data = await response.json()
-  return data.answered
 }
 
 export async function getSgf(problemId: string) {

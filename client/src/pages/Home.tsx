@@ -1,7 +1,7 @@
 // client/src/pages/Home.tsx
 import { useEffect, useState } from 'react'
 import { useRealTimeProblems } from '../hooks/useRealTimeProblems'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { hasUserAnswered } from '../utils/api'
 import { LoginButton } from '../components/LoginButton'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,6 +10,33 @@ export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
   const [answeredMap, setAnsweredMap] = useState<{ [problemId: number]: boolean }>({})
   const { isAuthenticated } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // エラーパラメータの検知
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      let message = ''
+      switch (error) {
+        case 'daily_limit':
+          message = 'X（旧Twitter）のAPI利用制限により、本日のログイン回数上限に達しました。明日再度お試しください。'
+          break
+        case 'rate_limit':
+          message = '現在、X（旧Twitter）のAPIアクセス制限により一時的にログインできません。しばらく待ってから再度お試しください。'
+          break
+        case 'auth_failed':
+          message = '認証処理中にエラーが発生しました。再度お試しください。'
+          break
+        default:
+          message = 'エラーが発生しました。'
+      }
+      setErrorMessage(message)
+      // URLからエラーパラメータを削除
+      searchParams.delete('error')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   // 日付をフォーマット（YYYY.MM.DD形式）
   const formatDate = (dateInput: string | Date) => {
@@ -62,6 +89,36 @@ export function Home() {
           )}
         </div>
       </header>
+
+      {errorMessage && (
+        <div className="error-message" style={{
+          backgroundColor: '#fee',
+          color: '#c00',
+          padding: '12px 20px',
+          margin: '10px 20px',
+          borderRadius: '4px',
+          border: '1px solid #fcc',
+          fontSize: '14px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>{errorMessage}</span>
+          <button 
+            onClick={() => setErrorMessage(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#c00',
+              fontSize: '18px',
+              cursor: 'pointer',
+              padding: '0 4px'
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <main>
         <div className="problems-list">
