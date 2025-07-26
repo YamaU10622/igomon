@@ -17,6 +17,8 @@ declare module 'express-session' {
     }
     redirectToResults?: boolean
     redirectProblemId?: string
+    fromQuestionnaire?: boolean
+    questionnaireProblemId?: string
   }
 }
 

@@ -134,8 +134,8 @@ export function Questionnaire() {
 
   return (
     <div className="questionnaire-page">
-      <LoginButton />
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{problem.id}</span>

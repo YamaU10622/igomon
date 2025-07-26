@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { ResultsDisplay } from '../components/ResultsDisplay'
+import { LoginButton } from '../components/LoginButton'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
 import { RANKS } from '../utils/rankUtils'
 import { useAuth } from '../contexts/AuthContext'
@@ -168,6 +169,7 @@ export function Results() {
   return (
     <div className="questionnaire-page">
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{problem.id} - 結果ページ</span>

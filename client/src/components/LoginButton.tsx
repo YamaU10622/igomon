@@ -1,28 +1,34 @@
 import { useAuth } from '../contexts/AuthContext'
+import { useLocation, useParams } from 'react-router-dom'
 
 export function LoginButton() {
   const { isAuthenticated, isLoading, login, logout, user } = useAuth()
+  const location = useLocation()
+  const { problemId } = useParams<{ problemId: string }>()
 
   if (isLoading) {
     return null
+  }
+
+  const handleLogin = () => {
+    // 回答ページからのログインの場合は、問題IDを含める
+    if (location.pathname.includes('/questionnaire/') && problemId) {
+      window.location.href = `/auth/x?from=questionnaire&problem_id=${problemId}`
+    } else {
+      login()
+    }
   }
 
   return (
     <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
       {isAuthenticated ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {user && (
-            <span style={{ fontSize: '14px', color: '#666' }}>
-              ログイン中: {user.xUserId ? `@${user.xUserId}` : `ID: ${user.id}`}
-            </span>
-          )}
           <button
             onClick={logout}
             style={{
-              padding: '8px 16px',
-              backgroundColor: '#f0f0f0',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
+              padding: '6px 10px',
+              backgroundColor: 'white',
+              color: '#333',
               cursor: 'pointer',
               fontSize: '14px',
             }}
@@ -32,18 +38,22 @@ export function LoginButton() {
         </div>
       ) : (
         <button
-          onClick={login}
+          onClick={handleLogin}
           style={{
-            padding: '8px 16px',
-            backgroundColor: '#1da1f2',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
+            padding: '6px 10px',
+            backgroundColor: 'white',
+            color: '#333',
             cursor: 'pointer',
             fontSize: '14px',
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f8f8f8'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'white'
+          }}
         >
-          Xでログイン
+          ログイン
         </button>
       )}
     </div>

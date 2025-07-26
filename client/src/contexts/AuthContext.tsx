@@ -58,17 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ログアウト
   const logout = async () => {
     try {
-      const response = await fetch('/auth/logout', {
+      // 先にトップページへリダイレクトしてから、バックグラウンドでログアウト処理を実行
+      window.location.replace('/')
+      
+      await fetch('/auth/logout', {
         method: 'POST',
         credentials: 'include',
       })
-
-      if (response.ok) {
-        setUser(null)
-        window.location.href = '/'
-      }
     } catch (error) {
       console.error('ログアウトエラー:', error)
+      // エラーが発生してもトップページへリダイレクト
+      window.location.replace('/')
     }
   }
 

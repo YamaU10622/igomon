@@ -63,6 +63,12 @@ router.get('/x', async (req, res) => {
       }
     }
     
+    // 回答ページからログインボタンでのリダイレクトの場合
+    if (req.query.from === 'questionnaire' && req.query.problem_id) {
+      req.session.fromQuestionnaire = true
+      req.session.questionnaireProblemId = req.query.problem_id as string
+    }
+    
     // 結果ページからのリダイレクトの場合、問題IDを一時保存
     if (req.query.redirect_to === 'results' && req.query.problem_id) {
       req.session.redirectToResults = true
@@ -174,6 +180,35 @@ router.get('/x/callback', async (req, res) => {
         console.error('回答保存エラー:', error)
         // エラーが発生しても結果ページへリダイレクト
         return res.redirect(`/results/${answerData.problemId}`)
+      }
+    }
+    
+    // 回答ページからログインボタンでログインした場合
+    if (req.session.fromQuestionnaire && req.session.questionnaireProblemId) {
+      const problemId = parseInt(req.session.questionnaireProblemId)
+      delete req.session.fromQuestionnaire
+      delete req.session.questionnaireProblemId
+      
+      try {
+        // 回答済みかチェック
+        const existingAnswer = await prisma.answer.findFirst({
+          where: {
+            userUuid: user.uuid,
+            problemId: problemId
+          }
+        })
+        
+        if (existingAnswer) {
+          // 回答済みの場合は結果ページへリダイレクト
+          return res.redirect(`/results/${problemId}`)
+        } else {
+          // 未回答の場合は回答ページに戻る
+          return res.redirect(`/questionnaire/${problemId}`)
+        }
+      } catch (error) {
+        console.error('回答状態チェックエラー:', error)
+        // エラーが発生した場合は回答ページに戻る
+        return res.redirect(`/questionnaire/${problemId}`)
       }
     }
     
