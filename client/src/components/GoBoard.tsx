@@ -10,7 +10,7 @@ interface GoBoardProps {
   showClickable?: boolean
   resultsData?: Record<string, { votes: number; answers: any[] }>
   maxMoves?: number // movesパラメータ対応
-  derivedTurn: "black" | "white"
+  derivedTurn?: 'black' | 'white'
 }
 
 declare global {
@@ -142,8 +142,8 @@ export default function GoBoard({
             let lastClickMarker: any = null
 
             // 現在の手番を取得（黒番: 1, 白番: -1）
-            const currentTurn = derivedTurn === "black" ? window.WGo.B : window.WGo.W
-	    
+            const currentTurn = derivedTurn === 'black' ? window.WGo.B : window.WGo.W
+
             // カスタム着手点マーカーハンドラーを定義
             const clickMarkerHandler = {
               stone: {
@@ -468,16 +468,15 @@ export default function GoBoard({
         const ctx = layer.context
         ctx.clearRect(0, 0, layer.element.width, layer.element.height)
         ctx.beginPath()
-        ctx.arc(xr, yr, sr * 1.3 , 0, 2 * Math.PI)
+        ctx.arc(xr, yr, sr * 1.3, 0, 2 * Math.PI)
         ctx.lineWidth = sr * 0.4
-        ctx.strokeStyle = "rgb(255 255 255 / 60%)"
+        ctx.strokeStyle = 'rgb(255 255 255 / 60%)'
         ctx.stroke()
         ctx.beginPath()
         ctx.arc(xr, yr, sr, 0, 2 * Math.PI)
         ctx.lineWidth = sr * 0.4
-        ctx.strokeStyle = "#fff"
+        ctx.strokeStyle = '#fff'
         ctx.stroke()
-
       } else {
         console.log('No result found for coordinate:', coordinate)
       }
@@ -486,8 +485,6 @@ export default function GoBoard({
     // クリック時の詳細表示
     boardInstance.addEventListener('click', resultClickHandlerRef.current)
   }
-
-
 
   // 座標変換（公式座標システム準拠）
   const sgfToWgoCoords = (sgfCoord: string): { x: number; y: number } => {
