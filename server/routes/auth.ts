@@ -288,7 +288,8 @@ router.get('/x/callback', async (req, res) => {
 // 現在のユーザー情報取得エンドポイント
 router.get('/me', async (req, res) => {
   if (!req.session.userId) {
-    return res.status(401).json({ error: '認証が必要です' })
+    // 未認証の場合も200を返す（nullを返すことで未認証を示す）
+    return res.status(200).json(null)
   }
 
   try {
@@ -298,7 +299,8 @@ router.get('/me', async (req, res) => {
     })
 
     if (!user) {
-      return res.status(404).json({ error: 'ユーザーが見つかりません' })
+      // ユーザーが見つからない場合も200でnullを返す
+      return res.status(200).json(null)
     }
 
     // BANチェック
@@ -306,7 +308,8 @@ router.get('/me', async (req, res) => {
       req.session.destroy((err) => {
         if (err) console.error('セッション削除エラー:', err)
       })
-      return res.status(401).json({ error: '認証が必要です' })
+      // BANされている場合も200でnullを返す
+      return res.status(200).json(null)
     }
 
     res.json({
