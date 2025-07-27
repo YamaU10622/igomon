@@ -5,7 +5,7 @@ import { saveAnswer, getResults, deleteAnswer, hasUserAnswered } from '../../lib
 import { loadProblemFromDirectory } from '../utils/problem-loader'
 import { createProblem } from '../../src/app/api/problems/create/route'
 import prisma from '../../lib/database'
-import { requireAuth, optionalAuth } from '../middleware/auth'
+import { requireAuth } from '../middleware/auth'
 
 const router = express.Router() as any
 

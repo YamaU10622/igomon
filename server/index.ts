@@ -33,24 +33,22 @@ const io = new SocketIOServer(server, {
 const port = process.env.PORT || 3000
 
 // ミドルウェア
-app.use(cors({
-  origin: (origin, callback) => {
-    // 開発環境では柔軟に対応
-    if (process.env.NODE_ENV !== 'production') {
-      // 開発環境では全てのオリジンを許可
-      callback(null, true)
-    } else if (!origin || origin === process.env.SITE_URL) {
-      // 本番環境では設定されたURLのみ許可
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
-}))
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // オリジンがない場合（同一オリジン）またはSITE_URLと一致する場合は許可
+      if (!origin || origin === process.env.SITE_URL) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+  }),
+)
 app.use(cookieParser())
 app.use(sessionMiddleware)
 app.use(express.json())
@@ -165,7 +163,6 @@ process.on('SIGTERM', () => {
   server.close()
 })
 
-const portNumber = typeof port === 'string' ? parseInt(port) : port
-server.listen(portNumber, '127.0.0.1', () => {
-  console.log(`Server running on http://127.0.0.1:${portNumber}`)
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`)
 })

@@ -15,7 +15,6 @@ model Problem {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deadline      DateTime?
-  ogp_image_url String?
   answers       Answer[]
 
   @@map("problems")
