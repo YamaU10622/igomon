@@ -1,0 +1,20 @@
+/* ────────── トグルボタン群 ────────── */
+.sort-toggle-group {
+  position: absolute;
+  bottom: 0rem; /* 下端をanswer-list の上端に合わせる */
+  display: flex;
+  gap: 0.3rem;
+  align-items: flex-end;
+  z-index: 1;
+}
+
+/* ────────── MUI ToggleButton の調整 ────────── */
+.sort-toggle-group .MuiToggleButton-root {
+  min-width: auto;
+  padding: 2px 6px;
+  font-weight: 400; /* 非選択時 */
+}
+
+.sort-toggle-group .MuiToggleButton-root.Mui-selected {
+  font-weight: 700; /* 選択時をボールド体 */
+}

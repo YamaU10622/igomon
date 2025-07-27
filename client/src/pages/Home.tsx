@@ -47,6 +47,23 @@ export function Home() {
     return `${year}.${month}.${day}`
   }
 
+  // 「期限」の表示内容
+  const remainingDays = (dateInput: string | Date) => {
+    const deadline = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
+    const today = new Date()
+    deadline.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    const diffInDays = (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+
+    if (diffInDays === 1) {
+       return <span className="deadline-today">本日</span>
+    } else if (diffInDays > 1) {
+       return <span>あと{diffInDays}日</span>
+    } else {
+       return formatDate(deadline)
+    }
+  }
+
   // ユーザーが回答済みかどうかを問題ごとにチェック
   useEffect(() => {
     const checkHasUserAnswered = async () => {
@@ -173,7 +190,7 @@ export function Home() {
                       </span>
                       {problem.deadline && (
                         <span className="problem-deadline">
-                          期限: {formatDate(problem.deadline)}
+                          期限: {remainingDays(problem.deadline)}
                         </span>
                       )}
                     </div>
