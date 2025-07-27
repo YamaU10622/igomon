@@ -11,6 +11,7 @@ import express, { Request, Response } from 'express'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import path from 'path'
 import apiRoutes from './routes/api'
 import authRoutes from './routes/auth'
@@ -50,6 +51,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposedHeaders: ['Set-Cookie']
 }))
+app.use(cookieParser())
 app.use(sessionMiddleware)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

@@ -109,30 +109,20 @@ router.get('/x/callback', async (req, res) => {
     const redirectUri = getRedirectUri(req)
     const tokenData = await exchangeCodeForToken(code as string, codeVerifier, redirectUri)
 
-    // JWTトークンからユーザーIDを抽出してみる
     let user = null
     let userData = null
 
-    // アクセストークンからユーザーIDを推定してみる
-    // X OAuth2のトークン形式: [base64]:[timestamp]:[version]:[type]:[userId]
-    const tokenParts = tokenData.access_token.split(':')
-    if (tokenParts.length >= 5) {
-      // トークンからuserIdを抽出できる可能性
-      const possibleUserId = tokenParts[tokenParts.length - 1]
+    // Cookieから以前のユーザーIDを取得
+    const cookieXUserId = req.cookies?.xUserId
 
-      // 既存ユーザーのチェック
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { xUserId: possibleUserId },
-            // セッションにxUserIdがある場合
-            ...(req.session.xUserId ? [{ xUserId: req.session.xUserId }] : []),
-          ],
-        },
+    // CookieにユーザーIDがある場合、まずDBで検索
+    if (cookieXUserId) {
+      const existingUser = await prisma.user.findUnique({
+        where: { xUserId: cookieXUserId },
       })
 
       if (existingUser) {
-        // トークン情報のみ更新
+        // 既存ユーザーが見つかった場合、トークン情報のみ更新
         user = await prisma.user.update({
           where: { id: existingUser.id },
           data: {
@@ -141,8 +131,9 @@ router.get('/x/callback', async (req, res) => {
             xTokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
           },
         })
+        console.log('Cookieから既存ユーザーを特定し、トークンを更新しました:', user.xUserId)
         userData = {
-          id: existingUser.xUserId!,
+          id: user.xUserId!,
           username: 'cached',
           name: 'cached',
         }
@@ -151,6 +142,7 @@ router.get('/x/callback', async (req, res) => {
 
     // ユーザーが見つからなかった場合のみAPIを呼び出す
     if (!user) {
+      console.log('既存ユーザーが見つからないため、X APIを呼び出します')
       userData = await fetchUserInfo(tokenData.access_token)
 
       // ユーザーの作成または更新
@@ -166,6 +158,16 @@ router.get('/x/callback', async (req, res) => {
     // セッションにユーザー情報を保存
     req.session.userId = user.id
     req.session.xUserId = user.xUserId || undefined
+
+    // CookieにもxUserIdを保存（30日間有効）
+    if (user.xUserId) {
+      res.cookie('xUserId', user.xUserId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30日間
+      })
+    }
 
     // セッション保存を確実にする
     await new Promise<void>((resolve, reject) => {
