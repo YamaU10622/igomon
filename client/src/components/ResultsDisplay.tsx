@@ -1,8 +1,16 @@
 // client/src/components/ResultsDisplay.tsx
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { deleteAnswer } from '../utils/api'
+import { rankToNumber, normalizeRank } from '../utils/rankUtils'
+import ToggleButton from '@mui/material/ToggleButton'
+import {
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
+  Sort as SortIcon,
+} from '@mui/icons-material'
 import { RangeSlider } from './RangeSlider'
+import '../styles/SortToggleGroup.css'
 
 interface Answer {
   id: number
@@ -23,6 +31,8 @@ interface ResultsDisplayProps {
   onRangeChange: (min: number, max: number) => void
 }
 
+type SortOrder = 'asc' | 'desc'
+
 export function ResultsDisplay({
   results,
   onDelete,
@@ -33,9 +43,12 @@ export function ResultsDisplay({
 }: ResultsDisplayProps) {
   const [selectedCoordinate, setSelectedCoordinate] = useState<string | null>(null)
   const [selectedSgfCoordinate, setSelectedSgfCoordinate] = useState<string | null>(null)
+  const [rankSortOrder, setRankSortOrder] = useState<SortOrder | null>(null)
+  const [postSortOrder, setPostSortOrder] = useState<SortOrder | null>('asc') // 初期状態では投稿順にソートされている
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
   const navigate = useNavigate()
   const { problemId } = useParams<{ problemId: string }>()
-  const answersListRef = useRef(null);
+  const answersListRef = useRef(null)
 
   // 表示座標からSGF座標に変換する関数
   const displayToSgfCoordinate = (displayCoord: string): string => {
@@ -65,8 +78,8 @@ export function ResultsDisplay({
       setSelectedSgfCoordinate(sgfCoord)
 
       // モバイル端末で見ている場合は画面全体のスクロール位置を調整
-      if (window.matchMedia("(max-width: 768px)").matches) {
-        setTimeout(() => window.scroll({top: 447, behavior: "smooth"}), 1)
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        setTimeout(() => window.scroll({ top: 447, behavior: 'smooth' }), 1)
       }
     }
 
@@ -90,6 +103,24 @@ export function ResultsDisplay({
     }
   }
 
+  const toggleRankSort = () => {
+    setRankSortOrder((prev) => {
+      if (prev === null) return 'desc' // 非ソートからソート状態への遷移
+      if (prev === 'desc') return 'asc'
+      return 'desc'
+    })
+    setPostSortOrder(null)
+  }
+
+  const togglePostSort = () => {
+    setPostSortOrder((prev) => {
+      if (prev === null) return 'desc' // 非ソートからソート状態への遷移
+      if (prev === 'desc') return 'asc'
+      return 'desc'
+    })
+    setRankSortOrder(null)
+  }
+
   // 総回答数を計算
   const totalVotes = Object.values(results).reduce((sum, { votes }) => sum + votes, 0)
 
@@ -99,12 +130,58 @@ export function ResultsDisplay({
       ? results[selectedSgfCoordinate].answers
       : []
 
+  // ソートされた回答を取得
+  const sortedAnswers = useMemo(() => {
+    const arr = [...selectedAnswers] // 元配列を破壊しない
+
+    // 投稿順ソート
+    if (postSortOrder) {
+      arr.sort((a, b) => {
+        const t1 = new Date(a.createdAt).getTime()
+        const t2 = new Date(b.createdAt).getTime()
+        return postSortOrder === 'asc' ? t1 - t2 : t2 - t1
+      })
+      return arr
+    }
+
+    // 段位順ソート
+    if (rankSortOrder) {
+      arr.sort((a, b) => {
+        const v1 = rankToNumber(normalizeRank(a.playerRank))
+        const v2 = rankToNumber(normalizeRank(b.playerRank))
+
+        // rankToNumber が -1（未知の段級位）の場合は配列末尾に回す
+        const safeV1 = v1 === -1 ? Number.MAX_SAFE_INTEGER : v1
+        const safeV2 = v2 === -1 ? Number.MAX_SAFE_INTEGER : v2
+
+        return rankSortOrder === 'asc' ? safeV1 - safeV2 : safeV2 - safeV1
+      })
+      return arr
+    }
+
+    // ソート無し
+    return arr
+  }, [selectedAnswers, postSortOrder, rankSortOrder])
+
   useEffect(() => {
     // 回答欄のスクロールを一番上に戻す
     if (answersListRef.current && answersListRef.current.scrollTop > 0) {
-      answersListRef.current.scroll({top: 0, behavior: 'smooth'})
+      answersListRef.current.scroll({ top: 0, behavior: 'smooth' })
     }
-  }, [selectedAnswers])
+  }, [sortedAnswers])
+
+  /*  answers-list のスクロールバー幅を測定し state へ反映  */
+  useEffect(() => {
+    const updateScrollbarWidth = () => {
+      const el = answersListRef.current as HTMLElement | null
+      if (!el) return
+      const width = el.offsetWidth - el.clientWidth /* = scrollbar 幅 or 0 */
+      setScrollbarWidth(width)
+    }
+    updateScrollbarWidth()
+    window.addEventListener('resize', updateScrollbarWidth)
+    return () => window.removeEventListener('resize', updateScrollbarWidth)
+  }, [sortedAnswers])
 
   return (
     <div className="results-display">
@@ -119,10 +196,64 @@ export function ResultsDisplay({
       {selectedCoordinate && selectedAnswers.length > 0 && (
         <div className="answer-details">
           <div className="coordinate-wrapper">
-            <h3 className="coordinate-header">{selectedCoordinate}</h3>
+            <h3 className="coordinate-header">
+              {/* 座標（左寄せ） */}
+              <span className="coord-label">{selectedCoordinate}</span>
+
+              {/* ソートトグル（右寄せ） */}
+              <span
+                className="sort-toggle-group"
+                /* answers-list の右 padding(0.5rem=8px) ＋ scrollbar 幅 ＋ border(1px) */
+                style={{ right: `calc(var(--answers-padding-x) + ${scrollbarWidth}px - 1px)` }}
+              >
+                <ToggleButton
+                  size="small"
+                  value="post"
+                  selected={postSortOrder !== null}
+                  onPointerDown={(e) => {
+                    // 長押しによるテキスト選択などを抑止
+                    e.preventDefault()
+                    togglePostSort()
+                  }}
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    minHeight: 28,
+                    fontSize: '0.75rem',
+                    '.MuiSvgIcon-root': { fontSize: 16 },
+                  }}
+                >
+                  投稿順&nbsp;
+                  {postSortOrder === null && <SortIcon fontSize="small" />}
+                  {postSortOrder === 'desc' && <ArrowUpwardIcon fontSize="small" />}
+                  {postSortOrder === 'asc' && <ArrowDownwardIcon fontSize="small" />}
+                </ToggleButton>
+                <ToggleButton
+                  size="small"
+                  value="rank"
+                  selected={rankSortOrder !== null}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    toggleRankSort()
+                  }}
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    minHeight: 28,
+                    fontSize: '0.75rem',
+                    '.MuiSvgIcon-root': { fontSize: 16 },
+                  }}
+                >
+                  段位順&nbsp;
+                  {rankSortOrder === null && <SortIcon fontSize="small" />}
+                  {rankSortOrder === 'desc' && <ArrowUpwardIcon fontSize="small" />}
+                  {rankSortOrder === 'asc' && <ArrowDownwardIcon fontSize="small" />}
+                </ToggleButton>
+              </span>
+            </h3>
           </div>
           <div className="answers-list" ref={answersListRef}>
-            {selectedAnswers.map((answer) => (
+            {sortedAnswers.map((answer) => (
               <div key={answer.id} className="answer-item">
                 <div className="answer-meta">
                   <div className="player-info">
