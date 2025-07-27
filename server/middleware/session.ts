@@ -25,8 +25,8 @@ declare module 'express-session' {
 // セッション設定
 const sessionConfig: SessionOptions = {
   secret: process.env.SESSION_SECRET || 'igomon-session-secret-change-in-production',
-  resave: true, // セッションを常に再保存
-  saveUninitialized: true, // セッションを確実に保存
+  resave: false,
+  saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // 本番環境でのみHTTPS必須
     httpOnly: true,
