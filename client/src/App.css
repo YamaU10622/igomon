@@ -224,6 +224,11 @@ button:hover {
   color: #999;
 }
 
+.deadline-today {
+  color: #f44336;
+  font-weight: 500;
+}
+
 /* アンケートページ */
 .questionnaire-page {
   background-color: #fafafa;
