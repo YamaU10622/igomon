@@ -1,6 +1,7 @@
 // client/src/components/AnswerForm.tsx
 import React, { useEffect, useState } from 'react'
 import { getAuthHeaders } from '../utils/auth'
+import { useAuth } from '../contexts/AuthContext'
 
 interface AnswerFormProps {
   selectedCoordinate: string
@@ -18,10 +19,16 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
   const [playerRank, setPlayerRank] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+  const { user, isAuthenticated } = useAuth()
 
   // DBから名前と段位を取得
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!isAuthenticated) {
+        setIsLoadingProfile(false)
+        return
+      }
+      
       try {
         const response = await fetch('/api/profile', {
           headers: getAuthHeaders(),
@@ -39,7 +46,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
     }
 
     fetchProfile()
-  }, [])
+  }, [isAuthenticated, user])
 
   // SGF座標を標準囲碁記法に変換
   const sgfToDisplayCoordinate = (sgfCoord: string): string => {

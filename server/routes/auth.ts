@@ -226,6 +226,36 @@ router.get('/x/callback', async (req, res) => {
             },
           })
 
+          // ユーザープロファイルも保存
+          if (answerData.playerName && answerData.playerRank) {
+            try {
+              const existingProfile = await prisma.userProfile.findUnique({
+                where: { userId: user.id },
+              })
+
+              if (existingProfile) {
+                await prisma.userProfile.update({
+                  where: { userId: user.id },
+                  data: {
+                    name: answerData.playerName,
+                    rank: answerData.playerRank,
+                    updatedAt: new Date(),
+                  },
+                })
+              } else {
+                await prisma.userProfile.create({
+                  data: {
+                    userId: user.id,
+                    name: answerData.playerName,
+                    rank: answerData.playerRank,
+                  },
+                })
+              }
+            } catch (profileError) {
+              console.error('プロファイル保存エラー（認証コールバック）:', profileError)
+            }
+          }
+
           // 回答保存後、結果ページへリダイレクト
           return res.redirect(`/results/${answerData.problemId}`)
         }
