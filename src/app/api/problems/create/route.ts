@@ -29,7 +29,7 @@ export async function createProblem(req: Request, res: Response) {
     let descriptionContent = `turn: ${turn}
 moves: ${moves}
 description: ${description}`
-    
+
     if (deadline) {
       descriptionContent += `
 deadline: ${deadline}`

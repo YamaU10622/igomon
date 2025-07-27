@@ -46,7 +46,6 @@ export function Questionnaire() {
     }
   }
 
-
   const loadProblem = async () => {
     try {
       setLoading(true)
@@ -96,12 +95,12 @@ export function Questionnaire() {
         // 回答データをセッションに保存してX認証へ
         const answerData = {
           problemId: problem.id,
-          ...formData
+          ...formData,
         }
         window.location.href = `/auth/x?answer_data=${encodeURIComponent(JSON.stringify(answerData))}`
         return
       }
-      
+
       // サーバーから返されたエラーメッセージを表示
       if (err.message) {
         setError(err.message)

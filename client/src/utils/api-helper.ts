@@ -7,9 +7,9 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     ...options,
     credentials: 'include', // セッションクッキーを含める
     headers: {
-      ...options.headers
-    }
+      ...options.headers,
+    },
   })
-  
+
   return response
 }

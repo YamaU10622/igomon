@@ -28,7 +28,7 @@ export function AnswerForm({ selectedCoordinate, onSubmit }: AnswerFormProps) {
         setIsLoadingProfile(false)
         return
       }
-      
+
       try {
         const response = await fetch('/api/profile', {
           headers: getAuthHeaders(),

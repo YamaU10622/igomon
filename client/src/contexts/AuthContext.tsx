@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 現在のパスを確認
       const currentPath = window.location.pathname
       const isQuestionnairePage = currentPath.includes('/questionnaire/')
-      
+
       // 回答ページの場合は、ログアウト処理を行いステートを更新するだけ
       if (isQuestionnairePage) {
         const response = await fetch('/auth/logout', {
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         // それ以外のページ（結果ページなど）では、即座にトップページへ遷移
         window.location.replace('/')
-        
+
         // バックグラウンドでログアウト処理
         fetch('/auth/logout', {
           method: 'POST',
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // エラーが発生した場合も同様の処理
       const currentPath = window.location.pathname
       const isQuestionnairePage = currentPath.includes('/questionnaire/')
-      
+
       if (!isQuestionnairePage) {
         window.location.replace('/')
       }

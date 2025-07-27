@@ -103,19 +103,19 @@ export class ProblemWatcher {
 
   private debouncedHandleProblemUpdate(dirPath: string) {
     const problemId = path.basename(dirPath)
-    
+
     // 既存のタイマーがあればクリア
     const existingTimer = this.updateTimers.get(problemId)
     if (existingTimer) {
       clearTimeout(existingTimer)
     }
-    
+
     // 新しいタイマーを設定（500ms後に実行）
     const timer = setTimeout(() => {
       this.handleProblemUpdate(dirPath)
       this.updateTimers.delete(problemId)
     }, 500)
-    
+
     this.updateTimers.set(problemId, timer)
   }
 

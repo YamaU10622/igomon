@@ -20,10 +20,12 @@ export function Home() {
       let message = ''
       switch (error) {
         case 'daily_limit':
-          message = 'X（旧Twitter）のAPI利用制限により、本日のログイン回数上限に達しました。明日再度お試しください。'
+          message =
+            'X（旧Twitter）のAPI利用制限により、本日のログイン回数上限に達しました。明日再度お試しください。'
           break
         case 'rate_limit':
-          message = '現在、X（旧Twitter）のAPIアクセス制限により一時的にログインできません。しばらく待ってから再度お試しください。'
+          message =
+            '現在、X（旧Twitter）のAPIアクセス制限により一時的にログインできません。しばらく待ってから再度お試しください。'
           break
         case 'auth_failed':
           message = '認証処理中にエラーが発生しました。再度お試しください。'
@@ -56,11 +58,11 @@ export function Home() {
     const diffInDays = (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
 
     if (diffInDays === 1) {
-       return <span className="deadline-today">本日</span>
+      return <span className="deadline-today">本日</span>
     } else if (diffInDays > 1) {
-       return <span>あと{diffInDays}日</span>
+      return <span>あと{diffInDays}日</span>
     } else {
-       return formatDate(deadline)
+      return formatDate(deadline)
     }
   }
 
@@ -108,20 +110,23 @@ export function Home() {
       </header>
 
       {errorMessage && (
-        <div className="error-message" style={{
-          backgroundColor: '#fee',
-          color: '#c00',
-          padding: '12px 20px',
-          margin: '10px 20px',
-          borderRadius: '4px',
-          border: '1px solid #fcc',
-          fontSize: '14px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div
+          className="error-message"
+          style={{
+            backgroundColor: '#fee',
+            color: '#c00',
+            padding: '12px 20px',
+            margin: '10px 20px',
+            borderRadius: '4px',
+            border: '1px solid #fcc',
+            fontSize: '14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <span>{errorMessage}</span>
-          <button 
+          <button
             onClick={() => setErrorMessage(null)}
             style={{
               background: 'none',
@@ -129,7 +134,7 @@ export function Home() {
               color: '#c00',
               fontSize: '18px',
               cursor: 'pointer',
-              padding: '0 4px'
+              padding: '0 4px',
             }}
           >
             ×
@@ -175,7 +180,7 @@ export function Home() {
                             {answeredMap[problem.id] ? (
                               <span className="already-answered">　回答済み</span>
                             ) : problem.deadline && new Date() > new Date(problem.deadline) ? (
-                               <span className="expired">　結果公開</span>
+                              <span className="expired">　結果公開</span>
                             ) : (
                               <span className="notyet-answered">　未回答</span>
                             )}

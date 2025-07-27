@@ -45,14 +45,14 @@ cp .env.example .env
 本プロジェクトではX OAuth 2.0認証を使用してユーザーログインを実装しています。開発環境でX認証機能を利用するには以下の設定が必要です：
 
 1. **開発用ドメインの設定**
-   
+
    X OAuthのcallback URLにlocalhostは使用できないため、開発用ドメインを設定します：
-   
+
    ```bash
    # /etc/hostsファイルに以下を追加（管理者権限が必要）
    sudo echo "127.0.0.1 dev.igomon.net" >> /etc/hosts
    ```
-   
+
    Windowsの場合は`C:\Windows\System32\drivers\etc\hosts`に同様の設定を追加してください。
 
 2. **X Developer Portalでアプリを作成**
@@ -66,8 +66,9 @@ cp .env.example .env
    - 許可するCallback URLs: `http://dev.igomon.net:5173/auth/x/callback`（開発環境）
 
 4. **環境変数の設定**
-   
+
    `.env`ファイルに以下を追加：
+
    ```bash
    # X OAuth2認証設定
    X_CLIENT_ID=your_client_id_here
@@ -100,6 +101,7 @@ npm run dev:client
 ```
 
 アプリケーションは以下のURLでアクセス可能です：
+
 - 通常のアクセス: http://localhost:5173
 - X OAuth認証を使用する場合: http://dev.igomon.net:5173 （/etc/hostsの設定が必要）
 

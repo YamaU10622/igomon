@@ -292,7 +292,7 @@ model User {
   bannedReason    String?  @map("banned_reason")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
-  
+
   profile         UserProfile?
 
   @@map("users")
@@ -326,7 +326,7 @@ model UserProfile {
   rank      String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
+
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("user_profiles")
@@ -2014,6 +2014,7 @@ app.get('/wgo/wgo.min.js', (req, res) => {
 
 **1. データベース拡張**
 Userモデルに以下のフィールドを追加:
+
 - `isBanned`: Boolean型、デフォルトfalse - アカウントが制限されているかどうか
 - `bannedReason`: String型、nullable - 制限理由の記録
 
@@ -2027,27 +2028,31 @@ if (user.isBanned) {
   req.session.destroy((err) => {
     if (err) console.error('セッション削除エラー:', err)
   })
-  
+
   // 認証エラーとして返す（詳細な理由は返さない）
   return res.status(401).json({ error: '認証が必要です' })
 }
 ```
 
 **3. BAN時の挙動**
+
 - ログイン試行時: BANチェックでブロックされ、セッションは作成されない
 - 既存ログインユーザー: 次回のAPI呼び出し時にBANチェックでブロック
 - エラーレスポンス: セキュリティ上の理由から、通常の認証エラーと同じメッセージ「認証が必要です」を返す
 
 **4. セッション管理**
+
 - ユーザーがBANされた際、既存のセッションはAPI呼び出し時に自動削除
 - セッション削除により、以降のアクセスは新規ログインが必要となる
 
 **5. 対象ユーザー**
+
 - 通常のUUID認証ユーザー
 - X（Twitter）OAuth連携ユーザー
 - すべての認証方式のユーザーが等しくBAN対象となる
 
 **6. 運用方法**
+
 - BAN設定: 管理者が直接データベースの`isBanned`フィールドをtrueに更新
 - BAN解除: 管理者が直接データベースの`isBanned`フィールドをfalseに更新
 - 理由記録: `bannedReason`フィールドに制限理由を記録（管理用）
@@ -2056,40 +2061,39 @@ if (user.isBanned) {
 
 ```typescript
 // server/middleware/auth.ts への追加実装
-export function requireAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
     return res.status(401).json({ error: '認証が必要です' })
   }
-  
-  prisma.user.findUnique({
-    where: { id: req.session.userId }
-  }).then(user => {
-    if (user) {
-      // BANチェック
-      if (user.isBanned) {
-        req.session.destroy(() => {
-          res.status(401).json({ error: '認証が必要です' })
-        })
-        return
+
+  prisma.user
+    .findUnique({
+      where: { id: req.session.userId },
+    })
+    .then((user) => {
+      if (user) {
+        // BANチェック
+        if (user.isBanned) {
+          req.session.destroy(() => {
+            res.status(401).json({ error: '認証が必要です' })
+          })
+          return
+        }
+
+        req.user = {
+          id: user.id,
+          uuid: user.uuid,
+          xUserId: user.xUserId,
+        }
+        next()
+      } else {
+        res.status(401).json({ error: '認証が必要です' })
       }
-      
-      req.user = {
-        id: user.id,
-        uuid: user.uuid,
-        xUserId: user.xUserId
-      }
-      next()
-    } else {
-      res.status(401).json({ error: '認証が必要です' })
-    }
-  }).catch(error => {
-    console.error('認証エラー:', error)
-    res.status(500).json({ error: '認証処理中にエラーが発生しました' })
-  })
+    })
+    .catch((error) => {
+      console.error('認証エラー:', error)
+      res.status(500).json({ error: '認証処理中にエラーが発生しました' })
+    })
 }
 ```
 

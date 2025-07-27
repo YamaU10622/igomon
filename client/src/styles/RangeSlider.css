@@ -44,7 +44,7 @@
 .slider-range {
   position: absolute;
   height: 100%;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   border-radius: 2px;
   transition: none;
 }
@@ -69,12 +69,14 @@
   width: 18px;
   height: 18px;
   background-color: #fff;
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: all;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .slider::-webkit-slider-thumb:hover {
@@ -90,12 +92,14 @@
   width: 18px;
   height: 18px;
   background-color: #fff;
-  border: 2px solid #4CAF50;
+  border: 2px solid #4caf50;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: all;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .slider::-moz-range-thumb:hover {
@@ -155,15 +159,15 @@
   .range-slider-container {
     padding: 10px;
   }
-  
+
   .range-slider-container h3 {
     font-size: 0.9rem;
   }
-  
+
   .range-display {
     font-size: 0.9rem;
   }
-  
+
   .slider-wrapper {
     margin: 12px 0;
   }
