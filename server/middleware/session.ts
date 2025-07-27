@@ -30,7 +30,7 @@ const sessionConfig: SessionOptions = {
   cookie: {
     secure: process.env.NODE_ENV === 'production', // 本番環境でのみHTTPS必須
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24時間
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7日間
     sameSite: 'lax', // CSRF対策
     path: '/', // 全パスで有効
     domain: undefined, // ドメインを指定しない（自動検出）
