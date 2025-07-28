@@ -4,10 +4,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { AnswerForm } from '../components/AnswerForm'
 import { getProblem, submitAnswer, hasUserAnswered } from '../utils/api'
+import { LoginButton } from '../components/LoginButton'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Questionnaire() {
   const { problemId } = useParams<{ problemId: string }>()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [problem, setProblem] = useState<any>(null)
   const [selectedCoordinate, setSelectedCoordinate] = useState('')
   const [loading, setLoading] = useState(true)
@@ -17,9 +20,14 @@ export function Questionnaire() {
   useEffect(() => {
     if (!problemId) return
 
-    // 回答済みかチェック
-    checkIfAnswered()
-  }, [problemId])
+    if (isAuthenticated) {
+      // 認証済みの場合、回答済みかチェック
+      checkIfAnswered()
+    } else {
+      // 未認証の場合は問題を読み込む
+      loadProblem()
+    }
+  }, [problemId, isAuthenticated])
 
   const checkIfAnswered = async () => {
     try {
@@ -82,6 +90,17 @@ export function Questionnaire() {
       // 回答済みの場合でも結果ページへ遷移
       navigate(`/results/${problemId}`)
     } catch (err: any) {
+      // 401エラーの場合はX認証へリダイレクト
+      if (err.message === '認証が必要です') {
+        // 回答データをセッションに保存してX認証へ
+        const answerData = {
+          problemId: problem.id,
+          ...formData,
+        }
+        window.location.href = `/auth/x?answer_data=${encodeURIComponent(JSON.stringify(answerData))}`
+        return
+      }
+
       // サーバーから返されたエラーメッセージを表示
       if (err.message) {
         setError(err.message)
@@ -115,6 +134,7 @@ export function Questionnaire() {
   return (
     <div className="questionnaire-page">
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{problem.id}</span>

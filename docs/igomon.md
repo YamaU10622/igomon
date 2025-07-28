@@ -280,6 +280,24 @@ model Problem {
   @@map("problems")
 }
 
+model User {
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique
+  authToken       String   @unique @map("auth_token")
+  xUserId         String?  @unique @map("x_user_id")
+  xAccessToken    String?  @map("x_access_token")
+  xRefreshToken   String?  @map("x_refresh_token")
+  xTokenExpiresAt DateTime? @map("x_token_expires_at")
+  isBanned        Boolean  @default(false) @map("is_banned")
+  bannedReason    String?  @map("banned_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  profile         UserProfile?
+
+  @@map("users")
+}
+
 model Answer {
   id          Int      @id @default(autoincrement())
   problemId   Int      @map("problem_id")
@@ -299,6 +317,19 @@ model Answer {
   @@index([coordinate])
   @@index([isDeleted])
   @@map("answers")
+}
+
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  name      String
+  rank      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
 }
 ```
 
@@ -1973,6 +2004,98 @@ app.get('/wgo/wgo.min.js', (req, res) => {
 - **DrawHandlers**: `CR`（円）、`LB`（ラベル）、`SQ`（四角）、`TR`（三角）等
 - **座標システム**: 相対座標（0-18）と絶対座標（ピクセル）の2種類
 - **Event処理**: `addEventListener("click", callback)`での盤面クリック検出
+
+### 8.16. アカウント制限機能
+
+**目的:**
+悪意のある書き込みを行うユーザーに対して、アカウントの利用を制限し、サービスの健全性を保つ。
+
+**実装仕様:**
+
+**1. データベース拡張**
+Userモデルに以下のフィールドを追加:
+
+- `isBanned`: Boolean型、デフォルトfalse - アカウントが制限されているかどうか
+- `bannedReason`: String型、nullable - 制限理由の記録
+
+**2. 認証ミドルウェアの拡張**
+すべての認証ミドルウェア（セッションベース・トークンベース）において、認証後にBANチェックを実施:
+
+```typescript
+// BANチェック処理
+if (user.isBanned) {
+  // セッション削除（セッションベース認証の場合）
+  req.session.destroy((err) => {
+    if (err) console.error('セッション削除エラー:', err)
+  })
+
+  // 認証エラーとして返す（詳細な理由は返さない）
+  return res.status(401).json({ error: '認証が必要です' })
+}
+```
+
+**3. BAN時の挙動**
+
+- ログイン試行時: BANチェックでブロックされ、セッションは作成されない
+- 既存ログインユーザー: 次回のAPI呼び出し時にBANチェックでブロック
+- エラーレスポンス: セキュリティ上の理由から、通常の認証エラーと同じメッセージ「認証が必要です」を返す
+
+**4. セッション管理**
+
+- ユーザーがBANされた際、既存のセッションはAPI呼び出し時に自動削除
+- セッション削除により、以降のアクセスは新規ログインが必要となる
+
+**5. 対象ユーザー**
+
+- 通常のUUID認証ユーザー
+- X（Twitter）OAuth連携ユーザー
+- すべての認証方式のユーザーが等しくBAN対象となる
+
+**6. 運用方法**
+
+- BAN設定: 管理者が直接データベースの`isBanned`フィールドをtrueに更新
+- BAN解除: 管理者が直接データベースの`isBanned`フィールドをfalseに更新
+- 理由記録: `bannedReason`フィールドに制限理由を記録（管理用）
+
+**実装例（認証ミドルウェア）:**
+
+```typescript
+// server/middleware/auth.ts への追加実装
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: '認証が必要です' })
+  }
+
+  prisma.user
+    .findUnique({
+      where: { id: req.session.userId },
+    })
+    .then((user) => {
+      if (user) {
+        // BANチェック
+        if (user.isBanned) {
+          req.session.destroy(() => {
+            res.status(401).json({ error: '認証が必要です' })
+          })
+          return
+        }
+
+        req.user = {
+          id: user.id,
+          uuid: user.uuid,
+          xUserId: user.xUserId,
+        }
+        next()
+      } else {
+        res.status(401).json({ error: '認証が必要です' })
+      }
+    })
+    .catch((error) => {
+      console.error('認証エラー:', error)
+      res.status(500).json({ error: '認証処理中にエラーが発生しました' })
+    })
+}
+```
 
 ## 9. 今後の課題と改善点
 

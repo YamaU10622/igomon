@@ -1,4 +1,7 @@
 // server/index.ts
+import dotenv from 'dotenv'
+dotenv.config()
+
 // 開発環境でもタイムゾーンを日本時間に設定
 if (!process.env.TZ) {
   process.env.TZ = 'Asia/Tokyo'
@@ -8,8 +11,11 @@ import express, { Request, Response } from 'express'
 import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import path from 'path'
 import apiRoutes from './routes/api'
+import authRoutes from './routes/auth'
+import { sessionMiddleware } from './middleware/session'
 import { ProblemWatcher } from './utils/file-watcher'
 import { loadProblemFromDirectory } from './utils/problem-loader'
 import { generateProblemHTML } from './utils/html-generator'
@@ -27,7 +33,24 @@ const io = new SocketIOServer(server, {
 const port = process.env.PORT || 3000
 
 // ミドルウェア
-app.use(cors())
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // オリジンがない場合（同一オリジン）またはSITE_URLと一致する場合は許可
+      if (!origin || origin === process.env.SITE_URL) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+  }),
+)
+app.use(cookieParser())
+app.use(sessionMiddleware)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -53,6 +76,7 @@ app.use('/ogp', express.static(path.join(rootDir, 'public/ogp')))
 
 // API ルート
 app.use('/api', apiRoutes)
+app.use('/auth', authRoutes)
 
 // WebSocket接続処理
 io.on('connection', async (socket) => {

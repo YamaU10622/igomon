@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,45 +8,64 @@ datasource db {
 }
 
 model Problem {
-  id          Int       @id
-  sgfFilePath String    @map("sgf_file_path")
-  description String
-  turn        String    // "black" or "white"
-  deadline    DateTime? // 期限（オプショナル）
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  answers     Answer[]
+  id            Int       @id @default(autoincrement())
+  sgfFilePath   String    @map("sgf_file_path")
+  description   String
+  turn          String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deadline      DateTime?
+  answers       Answer[]
 
   @@map("problems")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique
-  authToken String   @unique @map("auth_token")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique
+  xUserId         String?   @unique @map("x_user_id")
+  xAccessToken    String?   @map("x_access_token")
+  xRefreshToken   String?   @map("x_refresh_token")
+  xTokenExpiresAt DateTime? @map("x_token_expires_at")
+  isBanned        Boolean   @default(false) @map("is_banned")
+  bannedReason    String?   @map("banned_reason")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  profile         UserProfile?
 
   @@map("users")
 }
 
 model Answer {
-  id          Int      @id @default(autoincrement())
-  problemId   Int      @map("problem_id")
-  userUuid    String   @map("user_uuid")
-  coordinate  String   // SGF座標 (aa, ab, etc.)
-  reason      String
-  playerName  String   @map("player_name")
-  playerRank  String   @map("player_rank")
-  isDeleted   Boolean  @default(false) @map("is_deleted")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  problem     Problem  @relation(fields: [problemId], references: [id])
+  id         Int      @id @default(autoincrement())
+  problemId  Int      @map("problem_id")
+  userUuid   String   @map("user_uuid")
+  coordinate String
+  reason     String
+  playerName String   @map("player_name")
+  playerRank String   @map("player_rank")
+  isDeleted  Boolean  @default(false) @map("is_deleted")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  problem    Problem  @relation(fields: [problemId], references: [id])
 
   @@index([problemId])
   @@index([userUuid])
   @@index([coordinate])
   @@index([isDeleted])
   @@map("answers")
+}
+
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  name      String
+  rank      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
 }

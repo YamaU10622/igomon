@@ -3,12 +3,15 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import GoBoard from '../components/GoBoard'
 import { ResultsDisplay } from '../components/ResultsDisplay'
+import { LoginButton } from '../components/LoginButton'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
 import { RANKS } from '../utils/rankUtils'
+import { useAuth } from '../contexts/AuthContext'
 
 export function Results() {
   const { problemId } = useParams<{ problemId: string }>()
   const navigate = useNavigate()
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth()
   const [problem, setProblem] = useState<any>(null)
   const [results, setResults] = useState<Record<string, { votes: number; answers: any[] }>>({})
   const [allResults, setAllResults] = useState<Record<string, { votes: number; answers: any[] }>>(
@@ -20,21 +23,28 @@ export function Results() {
   const [maxRank, setMaxRank] = useState(RANKS.length - 1)
 
   useEffect(() => {
-    if (!problemId) return
+    if (!problemId || authLoading) return
+
+    // 認証されていない場合は自動的にログインページへ
+    if (!isAuthenticated) {
+      // 認証ページへリダイレクト（結果ページを見るためのパラメータを追加）
+      window.location.href = `/auth/x?redirect_to=results&problem_id=${problemId}`
+      return
+    }
 
     checkAnswerStatus()
-  }, [problemId])
+  }, [problemId, isAuthenticated, authLoading])
 
   const checkAnswerStatus = async () => {
     try {
       // まず問題データを取得して期限を確認
       const problemData = await getProblem(problemId!)
-      
+
       // 期限チェック
       if (problemData.deadline) {
         const now = new Date()
         const deadlineDate = new Date(problemData.deadline)
-        
+
         if (now >= deadlineDate) {
           // 期限切れの場合は回答状態に関わらず結果を表示
           setProblem(problemData)
@@ -42,7 +52,7 @@ export function Results() {
           return
         }
       }
-      
+
       // 期限内の場合、ユーザーが回答済みかチェック
       const answered = await hasUserAnswered(parseInt(problemId!))
 
@@ -56,12 +66,16 @@ export function Results() {
       setProblem(problemData)
       loadResultsOnly()
     } catch (err) {
-      console.error('回答状態の確認に失敗しました:', err)
+      console.error('回答状態の確認に失敗しました - 詳細:', err)
+      if (err instanceof Error) {
+        console.error('エラーメッセージ:', err.message)
+        console.error('エラースタック:', err.stack)
+      }
       setError('回答状態の確認に失敗しました')
       setLoading(false)
     }
   }
-  
+
   const loadResultsOnly = async () => {
     try {
       setLoading(true)
@@ -70,7 +84,7 @@ export function Results() {
       filterResults(resultsData, minRank, maxRank)
     } catch (err) {
       setError('結果の読み込みに失敗しました')
-      console.error(err)
+      console.error('結果取得エラー:', err)
     } finally {
       setLoading(false)
     }
@@ -133,7 +147,7 @@ export function Results() {
     setMaxRank(max)
   }
 
-  if (loading) {
+  if (loading || authLoading) {
     return <div className="loading">読み込み中...</div>
   }
 
@@ -142,6 +156,15 @@ export function Results() {
       <div className="error-page">
         <h2>エラー</h2>
         <p>{error}</p>
+        <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+          <p>認証状態: {isAuthenticated ? 'ログイン済み' : '未ログイン'}</p>
+          <p>問題ID: {problemId}</p>
+        </div>
+        {!isAuthenticated && (
+          <button onClick={login} style={{ marginRight: '10px' }}>
+            ログイン
+          </button>
+        )}
         <button onClick={() => navigate('/')}>トップへ戻る</button>
       </div>
     )
@@ -154,6 +177,7 @@ export function Results() {
   return (
     <div className="questionnaire-page">
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{problem.id} - 結果ページ</span>
