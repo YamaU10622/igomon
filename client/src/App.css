@@ -696,7 +696,7 @@ button:hover {
 }
 
 .results-summary {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
 }
@@ -725,7 +725,6 @@ button:hover {
   .coordinate-wrapper {
     position: sticky;
     top: calc(min(100vw, 390px) - 5px);
-    z-index: 5;
     padding: 2px 0;
   }
 }
@@ -743,17 +742,6 @@ button:hover {
   margin-bottom: 0rem;
   border-radius: 4px;
   position: relative;
-}
-
-/* 座標ラベルだけに背景と余白を付与 */
-.coord-label {
-  background-color: #f0f0f0;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 1rem;
 }
 
 @media (max-width: 768px) {

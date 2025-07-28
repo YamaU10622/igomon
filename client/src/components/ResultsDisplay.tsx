@@ -197,9 +197,6 @@ export function ResultsDisplay({
         <div className="answer-details">
           <div className="coordinate-wrapper">
             <h3 className="coordinate-header">
-              {/* 座標（左寄せ） */}
-              <span className="coord-label">{selectedCoordinate}</span>
-
               {/* ソートトグル（右寄せ） */}
               <span
                 className="sort-toggle-group"
