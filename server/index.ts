@@ -22,6 +22,9 @@ import { generateProblemHTML } from './utils/html-generator'
 import { getProblems } from '../lib/database'
 
 const app = express()
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1)
+}
 const server = createServer(app)
 const io = new SocketIOServer(server, {
   cors: {

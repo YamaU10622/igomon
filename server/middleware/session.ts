@@ -35,6 +35,7 @@ const sessionConfig: SessionOptions = {
     path: '/', // 全パスで有効
     domain: undefined, // ドメインを指定しない（自動検出）
   },
+  proxy: process.env.NODE_ENV === 'production',
   name: 'igomon.sid', // セッションクッキーの名前を指定
 }
 
