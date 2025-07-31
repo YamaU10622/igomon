@@ -23,16 +23,17 @@ model Problem {
 model User {
   id              Int       @id @default(autoincrement())
   uuid            String    @unique
-  xUserId         String?   @unique @map("x_user_id")
-  xAccessToken    String?   @map("x_access_token")
-  xRefreshToken   String?   @map("x_refresh_token")
-  xTokenExpiresAt DateTime? @map("x_token_expires_at")
+  xUserId         String?   @unique @map("x_user_id") // 後方互換性のため残す
+  xAccessToken    String?   @map("x_access_token") // 後方互換性のため残す
+  xRefreshToken   String?   @map("x_refresh_token") // 後方互換性のため残す
+  xTokenExpiresAt DateTime? @map("x_token_expires_at") // 後方互換性のため残す
   isBanned        Boolean   @default(false) @map("is_banned")
   bannedReason    String?   @map("banned_reason")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   
   profile         UserProfile?
+  authProviders   AuthProvider[]
 
   @@map("users")
 }
@@ -68,4 +69,22 @@ model UserProfile {
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("user_profiles")
+}
+
+model AuthProvider {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @map("user_id")
+  provider           String    // "x" or "google"
+  providerUserId     String    @map("provider_user_id")
+  accessToken        String?   @map("access_token")
+  refreshToken       String?   @map("refresh_token")
+  tokenExpiresAt     DateTime? @map("token_expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  
+  user               User      @relation(fields: [userId], references: [id])
+  
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("auth_providers")
 }

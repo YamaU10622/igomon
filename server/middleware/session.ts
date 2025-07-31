@@ -6,6 +6,7 @@ declare module 'express-session' {
   interface SessionData {
     userId?: number
     xUserId?: string
+    googleUserId?: string
     codeVerifier?: string
     state?: string
     pendingAnswer?: {

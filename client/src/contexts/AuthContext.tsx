@@ -50,9 +50,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
-  // ログイン（X認証へリダイレクト）
+  // ログイン（ログイン選択ページへリダイレクト）
   const login = () => {
-    window.location.href = '/auth/x'
+    // 現在のパスとクエリパラメータを保持
+    const currentPath = window.location.pathname
+    const searchParams = window.location.search
+    
+    // 回答ページからの場合、問題IDを含める
+    if (currentPath.includes('/questionnaire/')) {
+      const problemId = currentPath.split('/').pop()
+      window.location.href = `/login?from=questionnaire&problem_id=${problemId}`
+    } else if (searchParams) {
+      // 既存のクエリパラメータがある場合はそのまま渡す
+      window.location.href = `/login${searchParams}`
+    } else {
+      window.location.href = '/login'
+    }
   }
 
   // ログアウト

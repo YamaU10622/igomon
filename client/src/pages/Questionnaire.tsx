@@ -90,14 +90,14 @@ export function Questionnaire() {
       // 回答済みの場合でも結果ページへ遷移
       navigate(`/results/${problemId}`)
     } catch (err: any) {
-      // 401エラーの場合はX認証へリダイレクト
+      // 401エラーの場合はログイン選択画面へリダイレクト
       if (err.message === '認証が必要です') {
-        // 回答データをセッションに保存してX認証へ
+        // 回答データをセッションに保存してログイン選択画面へ
         const answerData = {
           problemId: problem.id,
           ...formData,
         }
-        window.location.href = `/auth/x?answer_data=${encodeURIComponent(JSON.stringify(answerData))}`
+        window.location.href = `/login?answer_data=${encodeURIComponent(JSON.stringify(answerData))}`
         return
       }
 
