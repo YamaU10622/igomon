@@ -28,7 +28,7 @@ export function Results() {
     // 認証されていない場合は自動的にログインページへ
     if (!isAuthenticated) {
       // 認証ページへリダイレクト（結果ページを見るためのパラメータを追加）
-      window.location.href = `/auth/x?redirect_to=results&problem_id=${problemId}`
+      window.location.href = `/login?from=results&problem_id=${problemId}`
       return
     }
 
