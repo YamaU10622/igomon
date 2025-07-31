@@ -43,7 +43,7 @@ router.get('/google', async (req, res) => {
     }
 
     // 結果ページからのリダイレクトの場合、問題IDを一時保存
-    if (req.query.redirect_to === 'results' && req.query.problem_id) {
+    if (req.query.from === 'results' && req.query.problem_id) {
       req.session.redirectToResults = true
       req.session.redirectProblemId = req.query.problem_id as string
     }
