@@ -381,9 +381,7 @@ async function exchangeCodeForToken(code: string, codeVerifier: string, redirect
 }
 
 // ユーザー情報取得関数
-async function fetchUserInfo(
-  accessToken: string,
-): Promise<{ id: string; email: string; name: string }> {
+async function fetchUserInfo(accessToken: string): Promise<{ id: string }> {
   const response = await request(USER_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -396,19 +394,14 @@ async function fetchUserInfo(
     throw new Error(`Google APIエラー: ${response.statusCode}`)
   }
 
-  const result = await response.body.json() as {
+  const result = (await response.body.json()) as {
     id: string
-    email: string
-    name: string
   }
   return result
 }
 
 // ユーザー作成/更新関数
-async function createOrUpdateUser(
-  googleUserData: { id: string; email: string; name: string },
-  tokenData: any,
-) {
+async function createOrUpdateUser(googleUserData: { id: string }, tokenData: any) {
   // 既存のAuthProviderを確認
   const existingProvider = await prisma.authProvider.findUnique({
     where: {
