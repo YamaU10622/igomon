@@ -15,6 +15,7 @@ import cookieParser from 'cookie-parser'
 import path from 'path'
 import apiRoutes from './routes/api'
 import authRoutes from './routes/auth'
+import authGoogleRoutes from './routes/auth-google'
 import { sessionMiddleware } from './middleware/session'
 import { ProblemWatcher } from './utils/file-watcher'
 import { loadProblemFromDirectory } from './utils/problem-loader'
@@ -80,6 +81,7 @@ app.use('/ogp', express.static(path.join(rootDir, 'public/ogp')))
 // API ルート
 app.use('/api', apiRoutes)
 app.use('/auth', authRoutes)
+app.use('/auth', authGoogleRoutes)
 
 // WebSocket接続処理
 io.on('connection', async (socket) => {

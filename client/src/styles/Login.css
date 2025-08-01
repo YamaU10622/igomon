@@ -1,0 +1,115 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.login-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 19px;
+  margin-bottom: 36px;
+  color: #333;
+}
+
+.login-options {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.login-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  transform: translateY(-4px);
+}
+
+.login-button:hover .login-icon-circle {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.login-icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.login-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.login-text {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.login-button-x .login-icon-circle {
+  background: white;
+}
+
+.login-button-x .login-icon {
+  fill: #000;
+}
+
+.login-button-google .login-icon-circle {
+  background: white;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.back-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .login-options {
+    gap: 24px;
+  }
+
+  .login-icon-circle {
+    width: 60px;
+    height: 60px;
+  }
+
+  .login-icon {
+    width: 24px;
+    height: 24px;
+  }
+}

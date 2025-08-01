@@ -11,12 +11,7 @@ export function LoginButton() {
   }
 
   const handleLogin = () => {
-    // 回答ページからのログインの場合は、問題IDを含める
-    if (location.pathname.includes('/questionnaire/') && problemId) {
-      window.location.href = `/auth/x?from=questionnaire&problem_id=${problemId}`
-    } else {
-      login()
-    }
+    login()
   }
 
   return (
