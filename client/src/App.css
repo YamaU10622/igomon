@@ -723,8 +723,6 @@ button:hover {
 
 @media (max-width: 768px) {
   .coordinate-wrapper {
-    position: sticky;
-    top: calc(min(100vw, 390px) - 5px);
     padding: 2px 0;
   }
 }
@@ -874,13 +872,13 @@ button:hover {
 }
 
 .answer-content {
-  padding: 1rem;
+  padding: 1rem 1rem 0.5rem 1rem;
   background-color: #fff;
 }
 
 @media (max-width: 768px) {
   .answer-content {
-    padding: 1.25rem;
+    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
   }
 }
 
@@ -897,6 +895,12 @@ button:hover {
     font-size: 16px;
     line-height: 1.8;
   }
+}
+
+.answer-createdAt {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #aaa;
 }
 
 .help-text {

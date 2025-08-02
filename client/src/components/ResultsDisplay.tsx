@@ -68,6 +68,16 @@ export function ResultsDisplay({
     return String.fromCharCode('a'.charCodeAt(0) + x) + String.fromCharCode('a'.charCodeAt(0) + y)
   }
 
+  // 日付を yyyy.MM.dd hh:mm 形式に
+  const dateFormat = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('ja-JP', {year: 'numeric', month: '2-digit', day: '2-digit'}).replaceAll('/', '.')
+      + ' '
+      + date.getHours().toString().padStart(2, '0')
+      + ':'
+      + date.getMinutes().toString().padStart(2, '0')
+  }
+
   useEffect(() => {
     // 碁盤からの詳細表示イベントをリッスン
     const handleShowDetails = (event: CustomEvent) => {
@@ -267,6 +277,7 @@ export function ResultsDisplay({
                 </div>
                 <div className="answer-content">
                   <p className="answer-reason">{answer.reason}</p>
+                  <div className="answer-createdAt">{dateFormat(answer.createdAt)}</div>
                 </div>
               </div>
             ))}
