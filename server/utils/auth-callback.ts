@@ -17,7 +17,6 @@ interface CallbackHandlerParams {
     [key: string]: any
   }
   createOrUpdateUser: (userData: any, tokenData: any) => Promise<any>
-  providerUserIdCookieName: string
 }
 
 export async function handleAuthCallback({
@@ -27,46 +26,89 @@ export async function handleAuthCallback({
   tokenData,
   userData,
   createOrUpdateUser,
-  providerUserIdCookieName,
 }: CallbackHandlerParams) {
   let user = null
+  let skipApiCall = false
 
-  // Cookieから以前のユーザーIDを取得
-  const cookieProviderUserId = req.cookies?.[providerUserIdCookieName]
+  // Cookieから以前のユーザーUUIDを取得
+  const cookieUserUuid = req.cookies?.userUuid
 
-  // CookieにユーザーIDがある場合、まずDBで検索
-  if (cookieProviderUserId) {
-    const existingProvider = await prisma.authProvider.findUnique({
-      where: {
-        provider_providerUserId: {
-          provider,
-          providerUserId: cookieProviderUserId,
-        },
-      },
+  // 既存のプロバイダー別クッキーから移行（後方互換性）
+  const legacyXUserId = req.cookies?.xUserId
+  const legacyGoogleUserId = req.cookies?.googleUserId
+
+  // CookieにユーザーUUIDがある場合、まずDBで検索
+  if (cookieUserUuid) {
+    const existingUser = await prisma.user.findUnique({
+      where: { uuid: cookieUserUuid },
       include: {
-        user: true,
+        authProviders: {
+          where: { provider },
+        },
       },
     })
 
-    if (existingProvider) {
+    if (existingUser && existingUser.authProviders.length > 0) {
       // 既存ユーザーが見つかった場合、トークン情報のみ更新
       await prisma.authProvider.update({
-        where: { id: existingProvider.id },
+        where: { id: existingUser.authProviders[0].id },
         data: {
           accessToken: tokenData.access_token,
           refreshToken: tokenData.refresh_token,
           tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
         },
       })
-      user = existingProvider.user
+      user = existingUser
+      skipApiCall = true
       console.log(
         `Cookieから既存ユーザーを特定し、トークンを更新しました:`,
-        cookieProviderUserId,
+        cookieUserUuid,
       )
       // userDataをキャッシュデータで上書き（APIコール回避）
       userData = {
-        id: cookieProviderUserId,
+        id: existingUser.authProviders[0].providerUserId,
         ...Object.fromEntries(Object.keys(userData).filter((k) => k !== 'id').map((k) => [k, 'cached'])),
+      }
+    }
+  }
+  
+  // レガシークッキーからの移行処理
+  if (!user && (legacyXUserId || legacyGoogleUserId)) {
+    const legacyProviderUserId = provider === 'x' ? legacyXUserId : legacyGoogleUserId
+    if (legacyProviderUserId) {
+      const existingProvider = await prisma.authProvider.findUnique({
+        where: {
+          provider_providerUserId: {
+            provider,
+            providerUserId: legacyProviderUserId,
+          },
+        },
+        include: {
+          user: true,
+        },
+      })
+
+      if (existingProvider) {
+        // 既存ユーザーが見つかった場合、トークン情報のみ更新
+        await prisma.authProvider.update({
+          where: { id: existingProvider.id },
+          data: {
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token,
+            tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
+          },
+        })
+        user = existingProvider.user
+        skipApiCall = true
+        console.log(
+          `レガシークッキーから既存ユーザーを特定し、トークンを更新しました:`,
+          legacyProviderUserId,
+        )
+        // userDataをキャッシュデータで上書き（APIコール回避）
+        userData = {
+          id: legacyProviderUserId,
+          ...Object.fromEntries(Object.keys(userData).filter((k) => k !== 'id').map((k) => [k, 'cached'])),
+        }
       }
     }
   }
@@ -74,7 +116,7 @@ export async function handleAuthCallback({
   // ユーザーが見つからなかった場合のみAPIを呼び出す
   if (!user) {
     console.log(`既存ユーザーが見つからないため、${provider.toUpperCase()} APIを呼び出します`)
-    // userDataは既に取得済みのものを使用
+    // userDataがskipApiCallの場合はキャッシュデータ、そうでない場合はAPIから取得済みのものを使用
     user = await createOrUpdateUser(userData, tokenData)
   }
 
@@ -86,17 +128,21 @@ export async function handleAuthCallback({
 
   // セッションにユーザー情報を保存
   req.session.userId = user.id
-  req.session[`${provider}UserId`] = userData?.id
+  req.session.userUuid = user.uuid
 
-  // CookieにもプロバイダーUserIdを保存（30日間有効）
-  if (userData?.id) {
-    res.cookie(providerUserIdCookieName, userData.id, {
+  // CookieにユーザーUUIDを保存（30日間有効）
+  if (user?.uuid) {
+    res.cookie('userUuid', user.uuid, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30日間
     })
   }
+
+  // レガシークッキーを削除
+  res.clearCookie('xUserId')
+  res.clearCookie('googleUserId')
 
   // セッション保存を確実にする
   await new Promise<void>((resolve, reject) => {

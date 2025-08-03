@@ -84,69 +84,16 @@ router.get('/x', async (req, res) => {
 
 // Step 2: コールバックエンドポイント
 router.get('/x/callback', async (req, res) => {
-  const { state, code, error } = req.query
-
-  // エラーチェック
-  if (error) {
-    console.error('認証エラー:', error)
-    return res.redirect('/')
-  }
-
-  // CSRF対策：stateの検証
-  if (state !== req.session.state) {
-    console.error('State不一致: 受信=', state, 'セッション=', req.session.state)
-    return res.status(400).send('Invalid state parameter')
-  }
-
-  // code_verifierの確認
-  const codeVerifier = req.session.codeVerifier
-  if (!codeVerifier) {
-    return res.status(400).send('Missing code verifier')
-  }
-
-  try {
-    // アクセストークンの取得
-    const redirectUri = getRedirectUri(req)
-    const tokenData = await exchangeCodeForToken(code as string, codeVerifier, redirectUri)
-
-    // ユーザー情報の取得（Cookieにない場合のみ）
-    let userData = null
-    const cookieXUserId = req.cookies?.xUserId
-    
-    if (!cookieXUserId) {
-      console.log('既存ユーザーが見つからないため、X APIを呼び出します')
-      userData = await fetchUserInfo(tokenData.access_token)
-    } else {
-      userData = {
-        id: cookieXUserId,
-        username: 'cached',
-        name: 'cached',
-      }
-    }
-
-    // 共通のコールバック処理を呼び出す
-    const { handleAuthCallback } = await import('../utils/auth-callback')
-    await handleAuthCallback({
-      req,
-      res,
-      provider: 'x',
-      tokenData,
-      userData,
-      createOrUpdateUser,
-      providerUserIdCookieName: 'xUserId',
-    })
-  } catch (error) {
-    console.error('X認証コールバックエラー:', error)
-
-    // エラーの種類に応じて適切なリダイレクト
-    if (error instanceof Error && error.message.includes('24時間ユーザー制限')) {
-      return res.redirect('/?error=daily_limit')
-    } else if (error instanceof Error && error.message.includes('レート制限')) {
-      return res.redirect('/?error=rate_limit')
-    } else {
-      return res.redirect('/?error=auth_failed')
-    }
-  }
+  const { handleCommonCallback } = await import('../utils/auth-common-callback')
+  await handleCommonCallback({
+    req,
+    res,
+    provider: 'x',
+    exchangeCodeForToken,
+    fetchUserInfo,
+    createOrUpdateUser,
+    getRedirectUri,
+  })
 })
 
 // 現在のユーザー情報取得エンドポイント
