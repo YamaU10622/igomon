@@ -5,6 +5,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { hasUserAnswered } from '../utils/api'
 import { LoginButton } from '../components/LoginButton'
 import { useAuth } from '../contexts/AuthContext'
+import { SEO } from '../components/SEO'
+import { WebApplicationStructuredData } from '../components/StructuredData'
 
 export function Home() {
   const { problems, isConnected } = useRealTimeProblems()
@@ -97,6 +99,8 @@ export function Home() {
 
   return (
     <div className="home-page">
+      <SEO />
+      <WebApplicationStructuredData />
       <LoginButton />
       <header>
         <h1>いごもん</h1>

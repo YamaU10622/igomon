@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# クローラーが過度にアクセスしないよう制限
+Crawl-delay: 1
+
+# サイトマップの場所
+Sitemap: https://igomon.com/sitemap.xml
