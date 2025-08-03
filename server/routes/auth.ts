@@ -117,58 +117,32 @@ router.get('/x/callback', async (req, res) => {
 
     // CookieにユーザーIDがある場合、まずDBで検索
     if (cookieXUserId) {
-      // 後方互換性: 旧カラムで検索
-      const existingUser = await prisma.user.findUnique({
-        where: { xUserId: cookieXUserId },
+      const existingProvider = await prisma.authProvider.findUnique({
+        where: {
+          provider_providerUserId: {
+            provider: 'x',
+            providerUserId: cookieXUserId,
+          },
+        },
+        include: {
+          user: true,
+        },
       })
 
-      if (existingUser) {
+      if (existingProvider) {
         // 既存ユーザーが見つかった場合、トークン情報のみ更新
-        user = await prisma.user.update({
-          where: { id: existingUser.id },
+        await prisma.authProvider.update({
+          where: { id: existingProvider.id },
           data: {
-            xAccessToken: tokenData.access_token,
-            xRefreshToken: tokenData.refresh_token,
-            xTokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token,
+            tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
           },
         })
-        
-        // auth_providerも更新
-        const authProvider = await prisma.authProvider.findUnique({
-          where: {
-            provider_providerUserId: {
-              provider: 'x',
-              providerUserId: cookieXUserId,
-            },
-          },
-        })
-
-        if (authProvider) {
-          await prisma.authProvider.update({
-            where: { id: authProvider.id },
-            data: {
-              accessToken: tokenData.access_token,
-              refreshToken: tokenData.refresh_token,
-              tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
-            },
-          })
-        } else {
-          // auth_providerがない場合は作成
-          await prisma.authProvider.create({
-            data: {
-              userId: existingUser.id,
-              provider: 'x',
-              providerUserId: cookieXUserId,
-              accessToken: tokenData.access_token,
-              refreshToken: tokenData.refresh_token,
-              tokenExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
-            },
-          })
-        }
-        
-        console.log('Cookieから既存ユーザーを特定し、トークンを更新しました:', user.xUserId)
+        user = existingProvider.user
+        console.log('Cookieから既存ユーザーを特定し、トークンを更新しました:', cookieXUserId)
         userData = {
-          id: user.xUserId!,
+          id: cookieXUserId,
           username: 'cached',
           name: 'cached',
         }
@@ -192,11 +166,11 @@ router.get('/x/callback', async (req, res) => {
 
     // セッションにユーザー情報を保存
     req.session.userId = user.id
-    req.session.xUserId = user.xUserId || undefined
+    req.session.xUserId = userData?.id
 
     // CookieにもxUserIdを保存（30日間有効）
-    if (user.xUserId) {
-      res.cookie('xUserId', user.xUserId, {
+    if (userData?.id) {
+      res.cookie('xUserId', userData.id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
