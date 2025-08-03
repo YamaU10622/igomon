@@ -6,6 +6,8 @@ import { AnswerForm } from '../components/AnswerForm'
 import { getProblem, submitAnswer, hasUserAnswered } from '../utils/api'
 import { LoginButton } from '../components/LoginButton'
 import { useAuth } from '../contexts/AuthContext'
+import { SEO } from '../components/SEO'
+import { BreadcrumbStructuredData } from '../components/StructuredData'
 
 export function Questionnaire() {
   const { problemId } = useParams<{ problemId: string }>()
@@ -131,8 +133,21 @@ export function Questionnaire() {
     return <div className="error-page">問題が見つかりません</div>
   }
 
+  const siteUrl = (import.meta.env?.VITE_SITE_URL as string) || 'https://igomon.com'
+  const breadcrumbItems = [
+    { name: 'ホーム', url: siteUrl },
+    { name: '問題一覧', url: siteUrl },
+    { name: problem.description || `問題 #${problemId}`, url: `${siteUrl}/problems/${problemId}` }
+  ]
+
   return (
     <div className="questionnaire-page">
+      <SEO 
+        title={problem.description || `囲碁問題 #${problemId}`}
+        description={`${problem.turn}番の問題です。${problem.description || 'あなたならどこに打ちますか？みんなの回答と比較してみましょう。'}`}
+        url={`${siteUrl}/problems/${problemId}`}
+      />
+      <BreadcrumbStructuredData items={breadcrumbItems} />
       <div className="questionnaire-container">
         <LoginButton />
         <div className="problem-header">

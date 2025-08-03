@@ -37,7 +37,33 @@ export default defineConfig({
   },
   build: {
     outDir: '../public/dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    // パフォーマンス最適化設定
+    chunkSizeWarningLimit: 1000,
+    cssCodeSplit: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // コード分割の最適化
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@mui/icons-material'],
+          utils: ['@sabaki/sgf', '@sabaki/go-board'],
+        },
+      },
+    },
+    // 圧縮の最適化
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
+  // 依存関係の事前バンドル
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@mui/material'],
   },
   resolve: {
     alias: {

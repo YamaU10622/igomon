@@ -7,6 +7,8 @@ import { LoginButton } from '../components/LoginButton'
 import { getProblem, getResults, hasUserAnswered } from '../utils/api'
 import { RANKS } from '../utils/rankUtils'
 import { useAuth } from '../contexts/AuthContext'
+import { SEO } from '../components/SEO'
+import { BreadcrumbStructuredData } from '../components/StructuredData'
 
 export function Results() {
   const { problemId } = useParams<{ problemId: string }>()
@@ -174,8 +176,22 @@ export function Results() {
     return <div className="error-page">問題が見つかりません</div>
   }
 
+  const siteUrl = (import.meta.env?.VITE_SITE_URL as string) || 'https://igomon.com'
+  const breadcrumbItems = [
+    { name: 'ホーム', url: siteUrl },
+    { name: '問題一覧', url: siteUrl },
+    { name: problem.description || `問題 #${problemId}`, url: `${siteUrl}/problems/${problemId}` },
+    { name: '結果', url: `${siteUrl}/results/${problemId}` }
+  ]
+
   return (
     <div className="questionnaire-page">
+      <SEO 
+        title={`結果 - ${problem.description || `囲碁問題 #${problemId}`}`}
+        description={`囲碁問題 #${problemId} の回答結果を確認しましょう。みんなの着手を棋力別に分析できます。`}
+        url={`${siteUrl}/results/${problemId}`}
+      />
+      <BreadcrumbStructuredData items={breadcrumbItems} />
       <div className="questionnaire-container">
         <LoginButton />
         <div className="problem-header">
