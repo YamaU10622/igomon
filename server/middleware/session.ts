@@ -5,8 +5,7 @@ import type { SessionOptions } from 'express-session'
 declare module 'express-session' {
   interface SessionData {
     userId?: number
-    xUserId?: string
-    googleUserId?: string
+    userUuid?: string
     codeVerifier?: string
     state?: string
     pendingAnswer?: {

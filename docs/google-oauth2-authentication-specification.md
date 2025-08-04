@@ -15,6 +15,7 @@ igomonにGoogle OAuth2認証を追加し、ユーザーがX（Twitter）また�
 ### 2.1 既存テーブルの変更
 
 #### usersテーブル
+
 - X認証専用カラムを削除し、汎用的な構造に変更
 
 ```sql
@@ -32,10 +33,10 @@ model User {
   bannedReason    String?   @map("banned_reason")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
-  
+
   profile         UserProfile?
   authProviders   AuthProvider[]
-  
+
   @@map("users")
 }
 ```
@@ -55,9 +56,9 @@ model AuthProvider {
   tokenExpiresAt     DateTime? @map("token_expires_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
-  
+
   user               User      @relation(fields: [userId], references: [id])
-  
+
   @@unique([provider, providerUserId])
   @@index([userId])
   @@map("auth_providers")
@@ -99,44 +100,44 @@ model AuthProvider {
    - 適切なページへリダイレクト
 
 3. **🚨 リダイレクト先の決定ロジック（最重要・X認証と完全同一）🚨**
-   
+
    **⚠️ 以下のロジックは必ず守ること。X認証（`/server/routes/auth.ts`）と完全に同じ実装にする**
-   
+
    優先順位に従って処理（上から順に評価）：
-   
+
    **① 一時保存した回答データがある場合（pendingAnswer）**:
-     - データベースで回答済みかチェック
-     - 未回答 → 回答を保存 → `/results/${problemId}`へリダイレクト
-     - 回答済み → データ破棄 → `/results/${problemId}`へリダイレクト
-   
+   - データベースで回答済みかチェック
+   - 未回答 → 回答を保存 → `/results/${problemId}`へリダイレクト
+   - 回答済み → データ破棄 → `/results/${problemId}`へリダイレクト
+
    **② 回答ページからログインボタンでログインした場合（fromQuestionnaire）**:
-     - データベースで回答済みかチェック
-     - 回答済み → `/results/${problemId}`へリダイレクト
-     - 未回答 → `/questionnaire/${problemId}`へリダイレクト（元のページに戻る）
-   
+   - データベースで回答済みかチェック
+   - 回答済み → `/results/${problemId}`へリダイレクト
+   - 未回答 → `/questionnaire/${problemId}`へリダイレクト（元のページに戻る）
+
    **③ 結果ページへのリダイレクトが必要な場合（redirectToResults）**:
-     - `/results/${problemId}`へリダイレクト
-   
+   - `/results/${problemId}`へリダイレクト
+
    **④ 上記のいずれにも該当しない場合（通常のログイン）**:
-     - `/`（トップページ）へリダイレクト
+   - `/`（トップページ）へリダイレクト
 
 ## 4. APIエンドポイント
 
 ### 4.1 認証関連エンドポイント
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/auth/google` | GET | Google認証開始 |
-| `/auth/google/callback` | GET | Google認証コールバック |
-| `/auth/x` | GET | X認証開始（既存） |
-| `/auth/x/callback` | GET | X認証コールバック（既存） |
-| `/auth/me` | GET | 現在のユーザー情報取得 |
-| `/auth/logout` | POST | ログアウト |
+| エンドポイント          | メソッド | 説明                      |
+| ----------------------- | -------- | ------------------------- |
+| `/auth/google`          | GET      | Google認証開始            |
+| `/auth/google/callback` | GET      | Google認証コールバック    |
+| `/auth/x`               | GET      | X認証開始（既存）         |
+| `/auth/x/callback`      | GET      | X認証コールバック（既存） |
+| `/auth/me`              | GET      | 現在のユーザー情報取得    |
+| `/auth/logout`          | POST     | ログアウト                |
 
 ### 4.2 ログイン画面
 
-| パス | 説明 |
-|-----|------|
+| パス     | 説明                     |
+| -------- | ------------------------ |
 | `/login` | ログイン選択画面（新規） |
 
 ## 5. 環境変数
@@ -156,12 +157,15 @@ GOOGLE_REDIRECT_URI=https://igomon.net/auth/google/callback
 ## 6. フロントエンド変更点
 
 ### 6.1 AuthContext
+
 - login関数を修正し、`/login`ページへ遷移するように変更
 
 ### 6.2 LoginButtonコンポーネント
+
 - ログインボタンクリック時の処理を修正
 
 ### 6.3 新規コンポーネント
+
 - Loginページコンポーネントを作成（`/client/src/pages/Login.tsx`）
 - X/Googleの選択UI
 
@@ -176,11 +180,13 @@ GOOGLE_REDIRECT_URI=https://igomon.net/auth/google/callback
 ## 8. エラーハンドリング
 
 ### 8.1 認証エラー
+
 - ユーザーが認証をキャンセル：トップページへリダイレクト
 - API制限エラー：適切なエラーメッセージを表示
 - トークン取得失敗：エラーページへリダイレクト
 
 ### 8.2 BANユーザー対応
+
 - X認証と同様に、BANされたユーザーはログインできない
 - auth_providersテーブルを通じてuserIdを特定し、User.isBannedをチェック
 
@@ -220,29 +226,29 @@ req.session = {
   // PKCE & CSRF対策
   codeVerifier: string,
   state: string,
-  
+
   // 回答ページからの一時データ
   pendingAnswer: {
     problemId: number,
     coordinate: string,
     reason: string,
     playerName: string,
-    playerRank: string
+    playerRank: string,
   },
-  
+
   // ログインボタンからのリダイレクト情報
   fromQuestionnaire: boolean,
   questionnaireProblemId: string,
-  
+
   // 結果ページへのリダイレクト情報
   redirectToResults: boolean,
-  redirectProblemId: string
+  redirectProblemId: string,
 }
 
 // 認証完了後のセッションデータ
 req.session = {
-  userId: number,        // 内部ユーザーID
-  googleUserId: string,  // GoogleユーザーID（表示用）
+  userId: number, // 内部ユーザーID
+  googleUserId: string, // GoogleユーザーID（表示用）
 }
 ```
 

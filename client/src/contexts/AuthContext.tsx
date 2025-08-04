@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 現在のパスとクエリパラメータを保持
     const currentPath = window.location.pathname
     const searchParams = window.location.search
-    
+
     // 回答ページからの場合、問題IDを含める
     if (currentPath.includes('/questionnaire/')) {
       const problemId = currentPath.split('/').pop()

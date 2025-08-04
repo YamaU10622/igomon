@@ -71,11 +71,15 @@ export function ResultsDisplay({
   // 日付を yyyy.MM.dd hh:mm 形式に
   const dateFormat = (dateStr: string): string => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ja-JP', {year: 'numeric', month: '2-digit', day: '2-digit'}).replaceAll('/', '.')
-      + ' '
-      + date.getHours().toString().padStart(2, '0')
-      + ':'
-      + date.getMinutes().toString().padStart(2, '0')
+    return (
+      date
+        .toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })
+        .replaceAll('/', '.') +
+      ' ' +
+      date.getHours().toString().padStart(2, '0') +
+      ':' +
+      date.getMinutes().toString().padStart(2, '0')
+    )
   }
 
   useEffect(() => {

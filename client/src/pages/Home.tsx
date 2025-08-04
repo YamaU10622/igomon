@@ -162,7 +162,11 @@ export function Home() {
                 className="problem-card-link"
                 onClick={(e) => {
                   // 結果公開の問題で未ログインの場合はログイン選択画面へ
-                  if (!isAuthenticated && problem.deadline && new Date() > new Date(problem.deadline)) {
+                  if (
+                    !isAuthenticated &&
+                    problem.deadline &&
+                    new Date() > new Date(problem.deadline)
+                  ) {
                     e.preventDefault()
                     window.location.href = `/login?from=results&problem_id=${problem.id}`
                   }
