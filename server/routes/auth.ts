@@ -2,6 +2,7 @@ import express from 'express'
 import { request } from 'undici'
 import crypto from 'node:crypto'
 import { PrismaClient } from '@prisma/client'
+import { handleCommonCallback } from '../utils/auth-common-callback'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -84,7 +85,6 @@ router.get('/x', async (req, res) => {
 
 // Step 2: コールバックエンドポイント
 router.get('/x/callback', async (req, res) => {
-  const { handleCommonCallback } = await import('../utils/auth-common-callback')
   await handleCommonCallback({
     req,
     res,
