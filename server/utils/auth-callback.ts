@@ -60,18 +60,19 @@ export async function handleAuthCallback({
       })
       user = existingUser
       skipApiCall = true
-      console.log(
-        `Cookieから既存ユーザーを特定し、トークンを更新しました:`,
-        cookieUserUuid,
-      )
+      console.log(`Cookieから既存ユーザーを特定し、トークンを更新しました:`, cookieUserUuid)
       // userDataをキャッシュデータで上書き（APIコール回避）
       userData = {
         id: existingUser.authProviders[0].providerUserId,
-        ...Object.fromEntries(Object.keys(userData).filter((k) => k !== 'id').map((k) => [k, 'cached'])),
+        ...Object.fromEntries(
+          Object.keys(userData)
+            .filter((k) => k !== 'id')
+            .map((k) => [k, 'cached']),
+        ),
       }
     }
   }
-  
+
   // レガシークッキーからの移行処理
   if (!user && (legacyXUserId || legacyGoogleUserId)) {
     const legacyProviderUserId = provider === 'x' ? legacyXUserId : legacyGoogleUserId
@@ -107,7 +108,11 @@ export async function handleAuthCallback({
         // userDataをキャッシュデータで上書き（APIコール回避）
         userData = {
           id: legacyProviderUserId,
-          ...Object.fromEntries(Object.keys(userData).filter((k) => k !== 'id').map((k) => [k, 'cached'])),
+          ...Object.fromEntries(
+            Object.keys(userData)
+              .filter((k) => k !== 'id')
+              .map((k) => [k, 'cached']),
+          ),
         }
       }
     }

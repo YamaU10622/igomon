@@ -51,7 +51,7 @@ export async function handleCommonCallback({
     // ユーザー情報の取得（Cookieにない場合のみ）
     let userData = null
     const cookieUserUuid = req.cookies?.userUuid
-    
+
     if (cookieUserUuid) {
       // UUIDがクッキーにある場合、DBで確認
       const existingUser = await prisma.user.findUnique({
@@ -62,13 +62,19 @@ export async function handleCommonCallback({
           },
         },
       })
-      
+
       if (existingUser && existingUser.authProviders.length > 0) {
         // 既存ユーザーが見つかった場合、APIコールをスキップ
-        console.log(`CookieのUUIDから既存ユーザーを特定しました、${provider.toUpperCase()} APIコールをスキップします`)
+        console.log(
+          `CookieのUUIDから既存ユーザーを特定しました、${provider.toUpperCase()} APIコールをスキップします`,
+        )
         userData = {
           id: existingUser.authProviders[0].providerUserId,
-          ...Object.fromEntries(Object.keys(userData || {}).filter((k) => k !== 'id').map((k) => [k, 'cached'])),
+          ...Object.fromEntries(
+            Object.keys(userData || {})
+              .filter((k) => k !== 'id')
+              .map((k) => [k, 'cached']),
+          ),
         }
       } else {
         // UUIDはあるがプロバイダーがない場合はAPIを呼び出す
