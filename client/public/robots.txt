@@ -7,4 +7,4 @@ Disallow: /admin/
 Crawl-delay: 1
 
 # サイトマップの場所
-Sitemap: https://igomon.com/sitemap.xml
+Sitemap: https://igomon.net/sitemap.xml
