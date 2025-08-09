@@ -144,9 +144,7 @@ const YosemonProblem: React.FC = () => {
           </div>
         </div>
 
-        <p className="problem-description">
-          A～Dの手を価値の高い順にドラッグ移動させて並べてください
-        </p>
+        <p className="problem-description">価値の高い順にドラッグ移動させて並べてください</p>
 
         <div className="questionnaire-content">
           <div className="board-wrapper">
@@ -184,13 +182,19 @@ const YosemonProblem: React.FC = () => {
                                   ...provided.draggableProps.style,
                                 }}
                               >
-                                <span 
+                                <span
                                   className="yosemon-option-label"
                                   style={{
-                                    color: label === 'A' ? '#dc2626' : 
-                                           label === 'B' ? '#2563eb' : 
-                                           label === 'C' ? '#16a34a' : 
-                                           label === 'D' ? '#9333ea' : '#333'
+                                    color:
+                                      label === 'A'
+                                        ? '#dc2626'
+                                        : label === 'B'
+                                          ? '#2563eb'
+                                          : label === 'C'
+                                            ? '#16a34a'
+                                            : label === 'D'
+                                              ? '#9333ea'
+                                              : '#333',
                                   }}
                                 >
                                   {label}

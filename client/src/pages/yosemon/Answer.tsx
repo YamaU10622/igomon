@@ -88,7 +88,7 @@ const YosemonAnswer: React.FC = () => {
           </div>
         </div>
 
-        <p className="problem-description">A～Dの手を価値の高い順に並べてください</p>
+        <p className="problem-description">価値の高い順に並べてください</p>
 
         <div className="questionnaire-content">
           <div className="board-wrapper board-wrapper-sticky">
@@ -114,13 +114,19 @@ const YosemonAnswer: React.FC = () => {
                   return (
                     <div key={userIndex} className="yosemon-answer-row">
                       <div className="yosemon-answer-user-container">
-                        <div 
+                        <div
                           className="yosemon-answer-user"
                           style={{
-                            color: userLabel === 'A' ? '#dc2626' : 
-                                   userLabel === 'B' ? '#2563eb' : 
-                                   userLabel === 'C' ? '#16a34a' : 
-                                   userLabel === 'D' ? '#9333ea' : '#333'
+                            color:
+                              userLabel === 'A'
+                                ? '#dc2626'
+                                : userLabel === 'B'
+                                  ? '#2563eb'
+                                  : userLabel === 'C'
+                                    ? '#16a34a'
+                                    : userLabel === 'D'
+                                      ? '#9333ea'
+                                      : '#333',
                           }}
                         >
                           {userLabel}
@@ -134,13 +140,19 @@ const YosemonAnswer: React.FC = () => {
                         </div>
                       </div>
                       <div className="yosemon-answer-correct-container">
-                        <span 
+                        <span
                           className="yosemon-answer-correct-text"
                           style={{
-                            color: correctLabel === 'A' ? '#dc2626' : 
-                                   correctLabel === 'B' ? '#2563eb' : 
-                                   correctLabel === 'C' ? '#16a34a' : 
-                                   correctLabel === 'D' ? '#9333ea' : '#333'
+                            color:
+                              correctLabel === 'A'
+                                ? '#dc2626'
+                                : correctLabel === 'B'
+                                  ? '#2563eb'
+                                  : correctLabel === 'C'
+                                    ? '#16a34a'
+                                    : correctLabel === 'D'
+                                      ? '#9333ea'
+                                      : '#333',
                           }}
                         >
                           {correctLabel}
