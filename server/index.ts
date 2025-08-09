@@ -16,11 +16,13 @@ import path from 'path'
 import apiRoutes from './routes/api'
 import authRoutes from './routes/auth'
 import authGoogleRoutes from './routes/auth-google'
+import yosemonRoutes from './routes/yosemon'
 import { initializeSessionMiddleware, closeRedisConnection } from './middleware/session'
 import { ProblemWatcher } from './utils/file-watcher'
 import { loadProblemFromDirectory } from './utils/problem-loader'
 import { generateProblemHTML } from './utils/html-generator'
 import { getProblems } from '../lib/database'
+import { initializeYosemonProblems } from './utils/yosemon-problem-loader'
 
 const app = express()
 if (process.env.NODE_ENV === 'production') {
@@ -90,6 +92,7 @@ async function initializeServer() {
   app.use('/api', apiRoutes)
   app.use('/auth', authRoutes)
   app.use('/auth', authGoogleRoutes)
+  app.use('/api/yosemon', yosemonRoutes)
 
   // WebSocket接続処理
   io.on('connection', async (socket) => {
@@ -106,6 +109,9 @@ async function initializeServer() {
 
   // ファイル監視を開始
   problemWatcher = new ProblemWatcher(io)
+  
+  // よせもん問題を初期化
+  await initializeYosemonProblems()
 
   // 環境変数からサイトURLを取得（デフォルトは開発環境）
   const siteUrl = process.env.SITE_URL || `http://localhost:${port}`

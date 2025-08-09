@@ -34,6 +34,7 @@ model User {
   
   profile         UserProfile?
   authProviders   AuthProvider[]
+  yosemonAnswers  YosemonUserAnswer[]
 
   @@map("users")
 }
@@ -87,4 +88,51 @@ model AuthProvider {
   @@unique([provider, providerUserId])
   @@index([userId])
   @@map("auth_providers")
+}
+
+// よせもん問題テーブル
+model YosemonProblem {
+  id            Int                 @id @default(autoincrement())
+  problemNumber Int                 @unique @map("problem_number") // ディレクトリ名に対応
+  moves         Int?                // 表示する手数（nullの場合は最終手まで）
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  
+  answers       YosemonAnswer[]     // 正解の選択肢情報
+  userAnswers   YosemonUserAnswer[] // ユーザーの回答履歴
+
+  @@map("yosemon_problems")
+}
+
+// よせもん問題の正解選択肢テーブル
+model YosemonAnswer {
+  id          Int            @id @default(autoincrement())
+  problemId   Int            @map("problem_id")
+  coordinate  String         // 座標（例: "L11"）
+  point       Int            // 目数
+  orderIndex  Int            @map("order_index") // 正解順序（0が最も価値が高い）
+  
+  problem     YosemonProblem @relation(fields: [problemId], references: [id])
+
+  @@unique([problemId, orderIndex])
+  @@index([problemId])
+  @@map("yosemon_answers")
+}
+
+// よせもんユーザー回答テーブル
+model YosemonUserAnswer {
+  id            Int            @id @default(autoincrement())
+  problemId     Int            @map("problem_id")
+  userId        Int            @map("user_id")
+  userAnswer    String         @map("user_answer") // ユーザーの回答順序（例: "A,C,B,D"）
+  isCorrect     Boolean        @map("is_correct")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  
+  problem       YosemonProblem @relation(fields: [problemId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+
+  @@index([problemId])
+  @@index([userId])
+  @@index([problemId, userId])
+  @@map("yosemon_user_answers")
 }
