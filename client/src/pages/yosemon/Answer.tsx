@@ -28,6 +28,13 @@ const YosemonAnswer: React.FC = () => {
     if (location.state && (location.state as any).result) {
       setResult((location.state as any).result)
       fetchProblem()
+      
+      // 表示済み問題として記録
+      const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
+      if (!viewedProblems.includes(id)) {
+        viewedProblems.push(id)
+        sessionStorage.setItem('yosemonViewedProblems', JSON.stringify(viewedProblems))
+      }
     } else {
       // stateがない場合は問題ページへリダイレクト
       navigate(`/yosemon/problems/${id}`)
@@ -54,15 +61,33 @@ const YosemonAnswer: React.FC = () => {
   const handleNextProblem = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/yosemon/problems/random/next', {
+      // まず全問題を取得して、表示済み問題を除外
+      const allProblemsResponse = await fetch('/api/yosemon/problems', {
         credentials: 'include',
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        navigate(`/yosemon/problems/${data.problemNumber}`)
-      } else {
+      
+      if (!allProblemsResponse.ok) {
         navigate('/yosemon')
+        return
+      }
+      
+      const allProblems = await allProblemsResponse.json()
+      const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
+      
+      // 未表示の問題を抽出
+      const unviewedProblems = allProblems.filter((p: any) => 
+        !viewedProblems.includes(p.problemNumber.toString())
+      )
+      
+      if (unviewedProblems.length === 0) {
+        // 全問題を表示済みの場合、セッションストレージをクリアしてHomeへ
+        sessionStorage.removeItem('yosemonViewedProblems')
+        navigate('/yosemon')
+      } else {
+        // 未表示問題からランダムに選択
+        const randomIndex = Math.floor(Math.random() * unviewedProblems.length)
+        const nextProblem = unviewedProblems[randomIndex]
+        navigate(`/yosemon/problems/${nextProblem.problemNumber}`)
       }
     } catch (error) {
       console.error('Error fetching next problem:', error)
