@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import YosemonBoard from '../../components/YosemonBoard'
+import { LoginButton } from '../../components/LoginButton'
+import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
 import '../../styles/Yosemon.css'
 
 interface AnswerResult {
@@ -81,10 +83,15 @@ const YosemonAnswer: React.FC = () => {
   return (
     <div className="questionnaire-page">
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{id}</span>
-            <span className="turn-info">黒番</span>
+            <span className="turn-info">
+              {problem && getCurrentTurnFromSGF(problem.sgf, problem.moves) === 'black'
+                ? '黒番'
+                : '白番'}
+            </span>
           </div>
         </div>
 

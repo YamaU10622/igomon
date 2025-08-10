@@ -198,6 +198,7 @@ const YosemonBoard: React.FC<YosemonBoardProps> = ({ sgf, moves, answers, size =
       }
       
       // 最終局面を盤面に表示
+      let lastMove = null;
       for (let x = 0; x < 19; x++) {
         for (let y = 0; y < 19; y++) {
           if (boardState[x][y] !== 0) {
@@ -209,6 +210,49 @@ const YosemonBoard: React.FC<YosemonBoardProps> = ({ sgf, moves, answers, size =
             });
           }
         }
+      }
+
+      // 最終手を記録
+      if (actualMoves > 0) {
+        const lastMoveData = parsedMoves[actualMoves - 1];
+        if (lastMoveData.x !== undefined && lastMoveData.y !== undefined) {
+          lastMove = {
+            x: lastMoveData.x,
+            y: lastMoveData.y,
+            color: lastMoveData.color === 1 ? window.WGo.B : window.WGo.W
+          };
+        }
+      }
+
+      // 最終手にマークを表示
+      if (lastMove && lastMove.x >= 0 && lastMove.y >= 0) {
+        // カスタムマーカーハンドラーを定義
+        const lastMoveMarkerHandler = {
+          stone: {
+            draw: function (args: any, board: any) {
+              const ctx = board.stone.getContext(args.x, args.y)
+              const xr = board.getX(args.x)
+              const yr = board.getY(args.y)
+              const sr = board.stoneRadius
+
+              // 石の色に応じて円の色を決定（白石には黒丸、黒石には白丸）
+              const markerColor = lastMove.color === window.WGo.B ? '#FFFFFF' : '#000000'
+
+              // 円を描画
+              ctx.beginPath()
+              ctx.arc(xr, yr, sr * 0.5, 0, 2 * Math.PI, true)
+              ctx.lineWidth = 3
+              ctx.strokeStyle = markerColor
+              ctx.stroke()
+            },
+          },
+        }
+
+        board.addObject({
+          x: lastMove.x,
+          y: lastMove.y,
+          type: lastMoveMarkerHandler,
+        })
       }
 
       // 選択肢のマーカーを追加（カスタムスタイル）

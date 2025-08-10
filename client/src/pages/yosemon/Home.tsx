@@ -1,111 +1,129 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import YosemonBoardThumbnail from '../../components/YosemonBoardThumbnail';
-import '../../styles/Yosemon.css';
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
+import { LoginButton } from '../../components/LoginButton'
+import YosemonBoardThumbnail from '../../components/YosemonBoardThumbnail'
+import '../../styles/Yosemon.css'
 
 interface Problem {
-  id: number;
-  problemNumber: number;
-  moves?: number;
-  answersCount: number;
-  correctRate: number;
-  userStatus: 'correct' | 'incorrect' | 'unanswered';
-  totalAnswers: number;
+  id: number
+  problemNumber: number
+  moves?: number
+  answersCount: number
+  correctRate: number
+  userStatus: 'correct' | 'incorrect' | 'unanswered'
+  totalAnswers: number
 }
 
 const YosemonHome: React.FC = () => {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [boardPreviews, setBoardPreviews] = useState<{[key: number]: string}>({});
-  const [answeredMap, setAnsweredMap] = useState<{ [problemNumber: number]: boolean }>({});
-  const { user, isAuthenticated } = useAuth();
+  const [problems, setProblems] = useState<Problem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [boardPreviews, setBoardPreviews] = useState<{
+    [key: number]: { sgf: string; moves: number }
+  }>({})
+  const [answeredMap, setAnsweredMap] = useState<{ [problemNumber: number]: boolean }>({})
+  const { user, isAuthenticated } = useAuth()
 
   useEffect(() => {
-    fetchProblems();
-  }, [user]);
+    fetchProblems()
+  }, [user])
 
   useEffect(() => {
     // 各問題の碁盤プレビューを生成
-    problems.forEach(problem => {
-      fetchBoardPreview(problem.problemNumber);
-    });
-  }, [problems]);
+    problems.forEach((problem) => {
+      fetchBoardPreview(problem.problemNumber)
+    })
+  }, [problems])
 
   // ユーザーが回答済みかどうかをチェック
   useEffect(() => {
     const checkAnsweredStatus = async () => {
       if (!isAuthenticated) {
-        setAnsweredMap({});
-        return;
+        setAnsweredMap({})
+        return
       }
 
       const results = await Promise.all(
         problems.map(async (problem) => {
           try {
-            const response = await fetch(`/api/yosemon/problems/${problem.problemNumber}/answered`, {
-              credentials: 'include',
-            });
-            const hasAnswered = response.ok && (await response.json()).hasAnswered;
-            return { problemNumber: problem.problemNumber, hasAnswered };
+            const response = await fetch(
+              `/api/yosemon/problems/${problem.problemNumber}/answered`,
+              {
+                credentials: 'include',
+              },
+            )
+            const hasAnswered = response.ok && (await response.json()).hasAnswered
+            return { problemNumber: problem.problemNumber, hasAnswered }
           } catch {
-            return { problemNumber: problem.problemNumber, hasAnswered: false };
+            return { problemNumber: problem.problemNumber, hasAnswered: false }
           }
-        })
-      );
+        }),
+      )
 
-      const newAnsweredMap: { [problemNumber: number]: boolean } = {};
+      const newAnsweredMap: { [problemNumber: number]: boolean } = {}
       results.forEach(({ problemNumber, hasAnswered }) => {
-        newAnsweredMap[problemNumber] = hasAnswered;
-      });
-      setAnsweredMap(newAnsweredMap);
-    };
+        newAnsweredMap[problemNumber] = hasAnswered
+      })
+      setAnsweredMap(newAnsweredMap)
+    }
 
     if (problems.length > 0) {
-      checkAnsweredStatus();
+      checkAnsweredStatus()
     }
-  }, [problems, isAuthenticated]);
+  }, [problems, isAuthenticated])
 
   const fetchProblems = async () => {
     try {
-      setError(null);
+      setError(null)
       const response = await fetch('/api/yosemon/problems', {
-        credentials: 'include'
-      });
-      
+        credentials: 'include',
+      })
+
       if (response.ok) {
-        const data = await response.json();
-        setProblems(data);
+        const data = await response.json()
+        setProblems(data)
       } else {
-        throw new Error('問題一覧の取得に失敗しました');
+        throw new Error('問題一覧の取得に失敗しました')
       }
     } catch (error) {
-      console.error('Error fetching problems:', error);
-      setError(error instanceof Error ? error.message : '問題一覧の取得に失敗しました');
+      console.error('Error fetching problems:', error)
+      setError(error instanceof Error ? error.message : '問題一覧の取得に失敗しました')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const fetchBoardPreview = async (problemNumber: number) => {
     try {
-      const response = await fetch(`/api/yosemon/problems/${problemNumber}`, {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setBoardPreviews(prev => ({
-          ...prev,
-          [problemNumber]: data.sgf
-        }));
+      // SGFファイルを取得
+      const sgfResponse = await fetch(`/api/yosemon/problems/${problemNumber}`, {
+        credentials: 'include',
+      })
+
+      // selection.jsonを取得
+      const selectionResponse = await fetch(`/yosemon/problems/${problemNumber}/selection.json`)
+
+      if (sgfResponse.ok && selectionResponse.ok) {
+        const sgfData = await sgfResponse.json()
+        const selectionData = await selectionResponse.json()
+
+        setBoardPreviews((prev) => {
+          const newPreviews = {
+            ...prev,
+            [problemNumber]: {
+              sgf: sgfData.sgf,
+              moves: selectionData.moves || 0,
+            },
+          }
+
+          return newPreviews
+        })
       }
     } catch (error) {
-      console.error('Error fetching board preview:', error);
+      console.error('Error fetching board preview:', error)
     }
-  };
-
+  }
 
   if (loading) {
     return (
@@ -113,7 +131,7 @@ const YosemonHome: React.FC = () => {
         <div className="yosemon-loading-spinner"></div>
         <p>読み込み中...</p>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -122,7 +140,7 @@ const YosemonHome: React.FC = () => {
         <div className="yosemon-error">
           <h3>エラーが発生しました</h3>
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => fetchProblems()}
             className="yosemon-nav-button primary"
             style={{ marginTop: '15px' }}
@@ -131,11 +149,12 @@ const YosemonHome: React.FC = () => {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="home-page yosemon-home">
+      <LoginButton />
       <header>
         <h1>よせもん</h1>
       </header>
@@ -154,7 +173,10 @@ const YosemonHome: React.FC = () => {
                 <div className="problem-card">
                   <div className="problem-thumbnail">
                     {boardPreviews[problem.problemNumber] ? (
-                      <YosemonBoardThumbnail sgf={boardPreviews[problem.problemNumber]} />
+                      <YosemonBoardThumbnail
+                        sgf={boardPreviews[problem.problemNumber]?.sgf}
+                        moves={boardPreviews[problem.problemNumber]?.moves}
+                      />
                     ) : (
                       <div className="yosemon-board-placeholder">
                         <div className="yosemon-loading-spinner"></div>
@@ -182,7 +204,7 @@ const YosemonHome: React.FC = () => {
         </div>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default YosemonHome;
+export default YosemonHome

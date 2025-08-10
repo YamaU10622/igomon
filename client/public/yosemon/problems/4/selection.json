@@ -1,0 +1,8 @@
+{
+  "moves": 43,
+  "answers": [
+    { "coordinate": "K3", "point": 15 },
+    { "coordinate": "H18", "point": 12 },
+    { "coordinate": "R14", "point": 8 }
+  ]
+}

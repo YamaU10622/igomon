@@ -2,10 +2,11 @@ import React, { useEffect, useRef } from 'react'
 
 interface YosemonBoardThumbnailProps {
   sgf: string
+  moves?: number
   size?: number
 }
 
-const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, size = 360 }) => {
+const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, moves, size = 360 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -135,7 +136,7 @@ const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, size
 
       // 着手を適用
       const movePattern = /;[BW]\[([a-s]{2})\]/g
-      const moves: { color: number; x: number; y: number }[] = []
+      const movesList: { color: number; x: number; y: number }[] = []
       while ((match = movePattern.exec(sgf)) !== null) {
         const color = match[0][1] === 'B' ? 1 : -1
         const coord = match[1]
@@ -143,13 +144,14 @@ const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, size
           const x = coord.charCodeAt(0) - 'a'.charCodeAt(0)
           const y = coord.charCodeAt(1) - 'a'.charCodeAt(0)
           if (x >= 0 && x < 19 && y >= 0 && y < 19) {
-            moves.push({ color, x, y })
+            movesList.push({ color, x, y })
           }
         }
       }
 
-      // 着手を順番に適用
-      moves.forEach((move) => {
+      // 着手を順番に適用（movesパラメータで指定された手数まで）
+      const movesToApply = moves !== undefined ? movesList.slice(0, moves) : movesList;
+      movesToApply.forEach((move) => {
         board[move.x][move.y] = move.color
       })
 
@@ -198,7 +200,7 @@ const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, size
     } catch (error) {
       console.error('Error parsing SGF:', error)
     }
-  }, [sgf, size])
+  }, [sgf, moves, size])
 
   return (
     <canvas

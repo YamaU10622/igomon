@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import YosemonBoard from '../../components/YosemonBoard'
 import { useAuth } from '../../contexts/AuthContext'
+import { LoginButton } from '../../components/LoginButton'
+import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
 import '../../styles/Yosemon.css'
 
 interface ProblemData {
@@ -69,14 +71,17 @@ const YosemonProblem: React.FC = () => {
   }
 
   const handleSubmit = async () => {
-    console.log('handleSubmit called')
-    console.log('isAuthenticated:', isAuthenticated)
-    console.log('user:', user)
-
     if (!isAuthenticated) {
       // 未ログインの場合はログインページへ
-      console.log('Not authenticated, redirecting to login')
       navigate('/login', { state: { from: `/yosemon/problems/${id}` } })
+      // 回答データも含めてセッションに保存するため
+      const answerData = encodeURIComponent(
+        JSON.stringify({
+          problemId: id,
+          userAnswer: answerOrder.join(','),
+        }),
+      )
+      window.location.href = `/login?from=yosemon&problem_id=${id}&answer_data=${answerData}`
       return
     }
 
@@ -86,7 +91,6 @@ const YosemonProblem: React.FC = () => {
     setError(null)
 
     try {
-      console.log('Submitting answer:', answerOrder.join(','))
       const response = await fetch(`/api/yosemon/problems/${id}/answer`, {
         method: 'POST',
         headers: {
@@ -98,11 +102,8 @@ const YosemonProblem: React.FC = () => {
         }),
       })
 
-      console.log('Response status:', response.status)
-
       if (response.ok) {
         const result = await response.json()
-        console.log('Result:', result)
         // 解答ページへ遷移（結果を渡す）
         navigate(`/yosemon/problems/answers/${id}`, {
           state: { result },
@@ -137,10 +138,15 @@ const YosemonProblem: React.FC = () => {
   return (
     <div className="questionnaire-page">
       <div className="questionnaire-container">
+        <LoginButton />
         <div className="problem-header">
           <div className="problem-info-left">
             <span className="problem-number">No.{problem.problemNumber}</span>
-            <span className="turn-info">黒番</span>
+            <span className="turn-info">
+              {problem && getCurrentTurnFromSGF(problem.sgf, problem.moves) === 'black'
+                ? '黒番'
+                : '白番'}
+            </span>
           </div>
         </div>
 
