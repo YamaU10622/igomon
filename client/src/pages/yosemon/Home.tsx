@@ -153,6 +153,9 @@ const YosemonHome: React.FC = () => {
       <LoginButton />
       <header>
         <h1>よせもん</h1>
+        <a href="/" className="igomon-link-button">
+          いごもんへ
+        </a>
       </header>
 
       <main>

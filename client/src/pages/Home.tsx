@@ -111,6 +111,11 @@ export function Home() {
             <span className="disconnected">● 接続中...</span>
           )}
         </div>
+        <div>
+          <a href="/yosemon" className="yosemon-link-button">
+            よせもんへ
+          </a>
+        </div>
       </header>
 
       {errorMessage && (
