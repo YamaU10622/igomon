@@ -167,6 +167,7 @@ export async function handleAuthCallback({
   const questionnaireProblemId = req.session.questionnaireProblemId
   const redirectToResults = req.session.redirectToResults
   const redirectProblemId = req.session.redirectProblemId
+  const pendingYosemonAnswer = req.session.pendingYosemonAnswer
 
   // セッションの一時データをクリーンアップ
   delete req.session.codeVerifier
@@ -176,17 +177,19 @@ export async function handleAuthCallback({
   delete req.session.questionnaireProblemId
   delete req.session.redirectToResults
   delete req.session.redirectProblemId
+  delete req.session.pendingYosemonAnswer
 
-  // 一時保存した回答データがある場合の処理
-  if (pendingAnswer) {
+  // 通常の回答データの場合（Yosemonではない）
+  if (pendingAnswer && !('userAnswer' in pendingAnswer)) {
     const answerData = pendingAnswer
 
     try {
-      // 回答済みかチェック
+      // 回答済みかチェック（削除されていない回答のみ）
       const existingAnswer = await prisma.answer.findFirst({
         where: {
           userUuid: user.uuid,
           problemId: answerData.problemId,
+          isDeleted: false,
         },
       })
 
@@ -270,6 +273,42 @@ export async function handleAuthCallback({
       console.error('回答状態チェックエラー:', error)
       // エラーが発生した場合は回答ページに戻る
       return res.redirect(`/questionnaire/${problemId}`)
+    }
+  }
+
+  // Yosemon回答データがある場合の処理
+  if (pendingYosemonAnswer) {
+    const yosemonData = pendingYosemonAnswer
+
+    try {
+      // Yosemon APIに回答を送信
+      const response = await fetch(
+        `http://localhost:3000/api/yosemon/problems/${yosemonData.problemId}/answer`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: req.headers.cookie || '',
+          },
+          body: JSON.stringify({
+            userAnswer: yosemonData.userAnswer,
+          }),
+        },
+      )
+
+      if (response.ok) {
+        const result = await response.json()
+        // Yosemon Answerページへリダイレクト
+        return res.redirect(`/yosemon/problems/answers/${yosemonData.problemId}`)
+      } else {
+        console.error('Yosemon回答送信エラー:', response.status, await response.text())
+        // エラーの場合はYosemon Problemページへ戻る
+        return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
+      }
+    } catch (error) {
+      console.error('Yosemon回答処理エラー:', error)
+      // エラーの場合はYosemon Problemページへ戻る
+      return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
     }
   }
 

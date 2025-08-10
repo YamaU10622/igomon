@@ -28,10 +28,20 @@ router.get('/x', async (req, res) => {
     req.session.state = state
 
     // 回答ページからのリダイレクトの場合、回答データを一時保存
+    let answerData: any = null
     if (req.query.answer_data) {
       try {
-        const answerData = JSON.parse(req.query.answer_data as string)
-        req.session.pendingAnswer = answerData
+        answerData = JSON.parse(req.query.answer_data as string)
+        // Yosemonデータかどうかを判定（userAnswerプロパティがある場合はYosemon）
+        if (answerData.userAnswer) {
+          // Yosemonデータの場合
+          req.session.pendingYosemonAnswer = answerData
+          console.log('✅ auth.ts: Yosemon回答データをセッションに保存:', answerData)
+        } else {
+          // 通常の回答データの場合
+          req.session.pendingAnswer = answerData
+          console.log('✅ auth.ts: 回答データをセッションに保存:', answerData)
+        }
       } catch (e) {
         console.error('回答データのパースエラー:', e)
       }
@@ -42,6 +52,7 @@ router.get('/x', async (req, res) => {
       req.session.fromQuestionnaire = true
       req.session.questionnaireProblemId = req.query.problem_id as string
     }
+
 
     // 結果ページからのリダイレクトの場合、問題IDを一時保存
     if (req.query.from === 'results' && req.query.problem_id) {

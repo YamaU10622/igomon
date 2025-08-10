@@ -21,6 +21,10 @@ declare module 'express-session' {
     redirectProblemId?: string
     fromQuestionnaire?: boolean
     questionnaireProblemId?: string
+    pendingYosemonAnswer?: {
+      problemId: string
+      userAnswer: string
+    }
   }
 }
 

@@ -108,6 +108,13 @@ const YosemonProblem: React.FC = () => {
         navigate(`/yosemon/problems/answers/${id}`, {
           state: { result },
         })
+      } else if (response.status === 401) {
+        // 未認証の場合はログイン画面へ（Yosemon用のパラメータを付与）
+        const yosemonData = {
+          problemId: id,
+          userAnswer: answerOrder.join(','),
+        }
+        window.location.href = `/login?from=yosemon&problem_id=${id}&answer_data=${encodeURIComponent(JSON.stringify(yosemonData))}`
       } else {
         const errorData = await response.json()
         console.error('Error response:', errorData)

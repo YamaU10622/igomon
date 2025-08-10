@@ -36,10 +36,54 @@ const YosemonAnswer: React.FC = () => {
         sessionStorage.setItem('yosemonViewedProblems', JSON.stringify(viewedProblems))
       }
     } else {
-      // stateがない場合は問題ページへリダイレクト
-      navigate(`/yosemon/problems/${id}`)
+      // stateがない場合はAPIから結果を取得
+      fetchAnswerData()
     }
   }, [id, navigate, location.state])
+
+  const fetchAnswerData = async () => {
+    try {
+      // 問題データを取得
+      const problemResponse = await fetch(`/api/yosemon/problems/${id}`, {
+        credentials: 'include',
+      })
+
+      if (problemResponse.ok) {
+        const problemData = await problemResponse.json()
+        setProblem(problemData)
+        
+        // ユーザーの回答履歴を取得
+        const answerResponse = await fetch(`/api/yosemon/problems/${id}/user-answer`, {
+          credentials: 'include',
+        })
+
+        if (answerResponse.ok) {
+          const answerData = await answerResponse.json()
+          if (answerData && answerData.result) {
+            setResult(answerData.result)
+            
+            // 表示済み問題として記録
+            const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
+            if (!viewedProblems.includes(id)) {
+              viewedProblems.push(id)
+              sessionStorage.setItem('yosemonViewedProblems', JSON.stringify(viewedProblems))
+            }
+          } else {
+            // 回答がない場合は問題ページへリダイレクト
+            navigate(`/yosemon/problems/${id}`)
+          }
+        } else {
+          // 回答取得に失敗した場合は問題ページへリダイレクト
+          navigate(`/yosemon/problems/${id}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching answer data:', error)
+      navigate(`/yosemon/problems/${id}`)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchProblem = async () => {
     try {

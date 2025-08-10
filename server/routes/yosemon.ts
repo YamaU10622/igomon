@@ -190,6 +190,72 @@ router.post('/problems/:id/answer', authenticateUser, async (req: Request, res: 
   }
 });
 
+// ユーザーの回答履歴取得API
+router.get('/problems/:id/user-answer', authenticateUser, async (req: Request, res: Response) => {
+  try {
+    const problemNumber = parseInt(req.params.id);
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // 問題情報を取得
+    const problem = await prisma.yosemonProblem.findUnique({
+      where: { problemNumber },
+      include: {
+        answers: {
+          orderBy: { orderIndex: 'asc' }
+        }
+      }
+    });
+    
+    if (!problem) {
+      return res.status(404).json({ error: 'Problem not found' });
+    }
+    
+    // ユーザーの最新の回答を取得
+    const userAnswer = await prisma.yosemonUserAnswer.findFirst({
+      where: {
+        problemId: problem.id,
+        userId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    if (!userAnswer) {
+      return res.status(404).json({ error: 'No answer found' });
+    }
+    
+    // ユーザーの回答を配列に変換
+    const userAnswerArray = userAnswer.userAnswer.split(',').map(s => s.trim());
+    
+    // 正解の順序を取得（アルファベット順）
+    const correctOrder = problem.answers
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map((_, index) => String.fromCharCode(65 + index));
+    
+    // Answer.tsxが期待する形式で返す
+    res.json({
+      result: {
+        isCorrect: userAnswer.isCorrect,
+        userAnswer: userAnswerArray,
+        correctAnswer: correctOrder,
+        answers: problem.answers.map(answer => ({
+          coordinate: answer.coordinate,
+          point: answer.point
+        }))
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user answer:', error);
+    res.status(500).json({ error: 'Failed to fetch user answer' });
+  }
+});
+
 // ランダム問題取得API
 router.get('/problems/random/next', authenticateUser, async (req: Request, res: Response) => {
   try {
