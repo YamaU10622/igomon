@@ -1,9 +1,0 @@
-{
-  "moves": 150,
-  "answers": [
-    {"coordinate": "Q1", "point": 15},
-    {"coordinate": "A10", "point": 12},
-    {"coordinate": "S14", "point": 8},
-    {"coordinate": "K10", "point": 6}
-  ]
-}

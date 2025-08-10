@@ -96,24 +96,20 @@ const YosemonHome: React.FC = () => {
 
   const fetchBoardPreview = async (problemNumber: number) => {
     try {
-      // SGFファイルを取得
-      const sgfResponse = await fetch(`/api/yosemon/problems/${problemNumber}`, {
+      // 問題データを取得（SGFとmovesが含まれている）
+      const response = await fetch(`/api/yosemon/problems/${problemNumber}`, {
         credentials: 'include',
       })
 
-      // selection.jsonを取得
-      const selectionResponse = await fetch(`/yosemon/problems/${problemNumber}/selection.json`)
-
-      if (sgfResponse.ok && selectionResponse.ok) {
-        const sgfData = await sgfResponse.json()
-        const selectionData = await selectionResponse.json()
+      if (response.ok) {
+        const data = await response.json()
 
         setBoardPreviews((prev) => {
           const newPreviews = {
             ...prev,
             [problemNumber]: {
-              sgf: sgfData.sgf,
-              moves: selectionData.moves || 0,
+              sgf: data.sgf,
+              moves: data.moves || 0,
             },
           }
 

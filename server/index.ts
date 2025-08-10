@@ -78,6 +78,12 @@ async function initializeServer() {
   // 静的ファイルのデバッグログ
   console.log('Static files serving from:', path.join(rootDir, 'public/dist'))
 
+  // API ルート（静的ファイルより先に設定）
+  app.use('/api', apiRoutes)
+  app.use('/auth', authRoutes)
+  app.use('/auth', authGoogleRoutes)
+  app.use('/api/yosemon', yosemonRoutes)
+
   // placeholder-board.pngを特定のルートで配信
   app.get('/placeholder-board.png', (_req: Request, res: Response) => {
     res.sendFile(path.join(rootDir, 'public/placeholder-board.png'))
@@ -87,12 +93,6 @@ async function initializeServer() {
   app.use('/wgo', express.static(path.join(rootDir, 'public/wgo'))) // WGo.js配信
   app.use('/problems', express.static(path.join(rootDir, 'public/problems')))
   app.use('/ogp', express.static(path.join(rootDir, 'public/ogp')))
-
-  // API ルート
-  app.use('/api', apiRoutes)
-  app.use('/auth', authRoutes)
-  app.use('/auth', authGoogleRoutes)
-  app.use('/api/yosemon', yosemonRoutes)
 
   // WebSocket接続処理
   io.on('connection', async (socket) => {

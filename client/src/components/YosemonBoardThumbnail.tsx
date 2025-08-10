@@ -6,11 +6,17 @@ interface YosemonBoardThumbnailProps {
   size?: number
 }
 
-const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, moves, size = 360 }) => {
+const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({
+  sgf,
+  moves,
+  size = 360,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    if (!canvasRef.current || !sgf) return
+    if (!canvasRef.current || !sgf) {
+      return
+    }
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
@@ -150,7 +156,7 @@ const YosemonBoardThumbnail: React.FC<YosemonBoardThumbnailProps> = ({ sgf, move
       }
 
       // 着手を順番に適用（movesパラメータで指定された手数まで）
-      const movesToApply = moves !== undefined ? movesList.slice(0, moves) : movesList;
+      const movesToApply = moves !== undefined ? movesList.slice(0, moves) : movesList
       movesToApply.forEach((move) => {
         board[move.x][move.y] = move.color
       })
