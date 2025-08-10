@@ -1,8 +1,0 @@
-{
-  "moves": 180,
-  "answers": [
-    {"coordinate": "L11", "point": 11},
-    {"coordinate": "G5", "point": 8},
-    {"coordinate": "J8", "point": 3}
-  ]
-}
