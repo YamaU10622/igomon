@@ -204,10 +204,8 @@ const YosemonAnswer: React.FC = () => {
                 {result.userAnswer.map((userLabel, userIndex) => {
                   const correctLabel = result.correctAnswer[userIndex]
                   const isPositionCorrect = userLabel === correctLabel
-                  // この位置（userIndex）に対応するポイントを取得
-                  // result.answersをポイント降順でソートして、userIndexの位置の答えを取得
-                  const sortedAnswers = [...result.answers].sort((a, b) => b.point - a.point)
-                  const answerInfo = sortedAnswers[userIndex]
+                  // バックエンドからすでにソート済みで受け取っているので、直接インデックスでアクセス
+                  const answerInfo = result.answers[userIndex]
 
                   return (
                     <div key={userIndex} className="yosemon-answer-row">

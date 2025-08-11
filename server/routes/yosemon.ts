@@ -191,15 +191,17 @@ router.post('/problems/:id/answer', authenticateUser, async (req: Request, res: 
       }
     });
     
-    // 正解情報を含めて返す
+    // 正解情報を含めて返す（answersはポイント降順でソート済み）
     res.json({
       isCorrect,
       userAnswer: userAnswerArray,
       correctAnswer: correctOrder,
-      answers: problem.answers.map(answer => ({
-        coordinate: answer.coordinate,
-        point: answer.point
-      }))
+      answers: problem.answers
+        .map(answer => ({
+          coordinate: answer.coordinate,
+          point: answer.point
+        }))
+        .sort((a, b) => b.point - a.point)
     });
     
   } catch (error) {
@@ -260,16 +262,18 @@ router.get('/problems/:id/user-answer', authenticateUser, async (req: Request, r
     // ここでは参考値として表示
     const referenceOrder = sortedByPoint.map((_, index) => String.fromCharCode(65 + index));
     
-    // Answer.tsxが期待する形式で返す
+    // Answer.tsxが期待する形式で返す（answersはポイント降順でソート済み）
     res.json({
       result: {
         isCorrect: userAnswer.isCorrect,
         userAnswer: userAnswerArray,
         correctAnswer: referenceOrder, // 参考値として提供
-        answers: problem.answers.map(answer => ({
-          coordinate: answer.coordinate,
-          point: answer.point
-        }))
+        answers: problem.answers
+          .map(answer => ({
+            coordinate: answer.coordinate,
+            point: answer.point
+          }))
+          .sort((a, b) => b.point - a.point)
       }
     });
     
