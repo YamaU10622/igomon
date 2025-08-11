@@ -29,8 +29,8 @@ function isValidCoordinate(coordinate: string): boolean {
 function validateSelectionJson(data: any): data is SelectionJson {
   if (!data || typeof data !== 'object') return false;
   
-  // answersが配列で、2〜4個の要素を持つこと
-  if (!Array.isArray(data.answers) || data.answers.length < 2 || data.answers.length > 4) {
+  // answersが配列で、2〜26個の要素を持つこと（最大でA-Zまで対応）
+  if (!Array.isArray(data.answers) || data.answers.length < 2 || data.answers.length > 26) {
     return false;
   }
   

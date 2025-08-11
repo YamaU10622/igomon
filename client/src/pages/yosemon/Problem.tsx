@@ -186,35 +186,30 @@ const YosemonProblem: React.FC = () => {
                       ref={provided.innerRef}
                       className="yosemon-answer-list"
                     >
-                      {answerOrder.map((label, index) => {
-                        const answer = problem.answers.find((a) => a.label === label)
-                        if (!answer) return null
-
-                        return (
-                          <Draggable key={label} draggableId={label} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`yosemon-answer-option ${snapshot.isDragging ? 'dragging' : ''}`}
+                      {answerOrder.map((label, index) => (
+                        <Draggable key={label} draggableId={label} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`yosemon-answer-option ${snapshot.isDragging ? 'dragging' : ''}`}
+                              style={{
+                                ...provided.draggableProps.style,
+                              }}
+                            >
+                              <span
+                                className="yosemon-option-label"
                                 style={{
-                                  ...provided.draggableProps.style,
+                                  color: getLabelColor(label)
                                 }}
                               >
-                                <span
-                                  className="yosemon-option-label"
-                                  style={{
-                                    color: getLabelColor(label)
-                                  }}
-                                >
-                                  {label}
-                                </span>
-                              </div>
-                            )}
-                          </Draggable>
-                        )
-                      })}
+                                {label}
+                              </span>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
                       {provided.placeholder}
                     </div>
                   )}
