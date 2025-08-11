@@ -279,8 +279,26 @@ export async function handleAuthCallback({
   // Yosemon回答データがある場合の処理
   if (pendingYosemonAnswer) {
     const yosemonData = pendingYosemonAnswer
+    console.log('Yosemonデータ処理開始:', yosemonData)
 
     try {
+      // 問題データを取得（shuffledAnswersの取得のため）
+      const problemResponse = await fetch(
+        `http://localhost:3000/api/yosemon/problems/${yosemonData.problemId}`,
+        {
+          headers: {
+            Cookie: req.headers.cookie || '',
+          },
+        },
+      )
+
+      if (!problemResponse.ok) {
+        console.error('Yosemon問題取得エラー:', problemResponse.status)
+        return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
+      }
+
+      const problemData = await problemResponse.json()
+
       // Yosemon APIに回答を送信
       const response = await fetch(
         `http://localhost:3000/api/yosemon/problems/${yosemonData.problemId}/answer`,
@@ -292,12 +310,14 @@ export async function handleAuthCallback({
           },
           body: JSON.stringify({
             userAnswer: yosemonData.userAnswer,
+            shuffledAnswers: problemData.answers, // 問題の回答データを含める
           }),
         },
       )
 
       if (response.ok) {
         const result = await response.json()
+        console.log('Yosemon回答送信成功、Answerページへリダイレクト')
         // Yosemon Answerページへリダイレクト
         return res.redirect(`/yosemon/problems/answers/${yosemonData.problemId}`)
       } else {

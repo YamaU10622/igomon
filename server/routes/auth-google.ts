@@ -47,6 +47,12 @@ router.get('/google', async (req, res) => {
       }
     }
 
+    // よせもんからのリダイレクトの場合
+    if (req.query.from === 'yosemon' && req.query.problem_id) {
+      // answer_dataが既にセッションに保存されている場合は、pendingYosemonAnswerに設定済み
+      console.log('✅ auth-google.ts: よせもんからのリダイレクト設定')
+    }
+
     // 回答ページからログインボタンでのリダイレクトの場合
     if (req.query.from === 'questionnaire' && req.query.problem_id) {
       req.session.fromQuestionnaire = true
