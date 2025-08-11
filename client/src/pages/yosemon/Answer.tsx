@@ -4,6 +4,7 @@ import YosemonBoard from '../../components/YosemonBoard'
 import { LoginButton } from '../../components/LoginButton'
 import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
 import { useYosemonProblem } from '../../contexts/YosemonProblemContext'
+import { getLabelColor } from '../../utils/label-colors'
 import '../../styles/Yosemon.css'
 
 interface AnswerResult {
@@ -15,6 +16,8 @@ interface AnswerResult {
     point: number
   }>
 }
+
+
 
 const YosemonAnswer: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -212,16 +215,7 @@ const YosemonAnswer: React.FC = () => {
                         <div
                           className="yosemon-answer-user"
                           style={{
-                            color:
-                              userLabel === 'A'
-                                ? '#dc2626'
-                                : userLabel === 'B'
-                                  ? '#2563eb'
-                                  : userLabel === 'C'
-                                    ? '#16a34a'
-                                    : userLabel === 'D'
-                                      ? '#9333ea'
-                                      : '#333',
+                            color: getLabelColor(userLabel)
                           }}
                         >
                           {userLabel}
@@ -238,16 +232,7 @@ const YosemonAnswer: React.FC = () => {
                         <span
                           className="yosemon-answer-correct-text"
                           style={{
-                            color:
-                              correctLabel === 'A'
-                                ? '#dc2626'
-                                : correctLabel === 'B'
-                                  ? '#2563eb'
-                                  : correctLabel === 'C'
-                                    ? '#16a34a'
-                                    : correctLabel === 'D'
-                                      ? '#9333ea'
-                                      : '#333',
+                            color: getLabelColor(correctLabel)
                           }}
                         >
                           {correctLabel}

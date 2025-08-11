@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useYosemonProblem } from '../../contexts/YosemonProblemContext'
 import { LoginButton } from '../../components/LoginButton'
 import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
+import { getLabelColor } from '../../utils/label-colors'
 import '../../styles/Yosemon.css'
 
 interface ProblemData {
@@ -18,6 +19,7 @@ interface ProblemData {
     coordinate: string
   }>
 }
+
 
 const YosemonProblem: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -203,16 +205,7 @@ const YosemonProblem: React.FC = () => {
                                 <span
                                   className="yosemon-option-label"
                                   style={{
-                                    color:
-                                      label === 'A'
-                                        ? '#dc2626'
-                                        : label === 'B'
-                                          ? '#2563eb'
-                                          : label === 'C'
-                                            ? '#16a34a'
-                                            : label === 'D'
-                                              ? '#9333ea'
-                                              : '#333',
+                                    color: getLabelColor(label)
                                   }}
                                 >
                                   {label}

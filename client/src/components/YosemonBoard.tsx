@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { getLabelColor } from '../utils/label-colors';
 
 // SGFパース関数を直接定義（GoBoard.tsxと同じ実装）
 const parseSgfMoves = (sgfContent: string): Array<{ color: number; x: number; y: number }> => {
@@ -256,16 +257,6 @@ const YosemonBoard: React.FC<YosemonBoardProps> = ({ sgf, moves, answers, size =
       }
 
       // 選択肢のマーカーを追加（カスタムスタイル）
-      const getLabelColor = (label: string): string => {
-        switch(label) {
-          case 'A': return '#dc2626'; // 赤
-          case 'B': return '#2563eb'; // 青
-          case 'C': return '#16a34a'; // 緑
-          case 'D': return '#9333ea'; // 紫
-          default: return '#15803d'; // デフォルト：濃い緑
-        }
-      };
-
       const labelHandler = {
         stone: {
           draw: function(args: any, board: any) {
