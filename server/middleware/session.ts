@@ -25,6 +25,8 @@ declare module 'express-session' {
       problemId: string
       userAnswer: string
     }
+    // 問題ごとのシャッフル順序を保存
+    shuffleOrders?: Record<string, number[]>
   }
 }
 

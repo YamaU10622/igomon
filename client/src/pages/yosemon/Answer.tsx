@@ -15,6 +15,7 @@ interface AnswerResult {
     coordinate: string
     point: number
   }>
+  labelPoints?: { [key: string]: number }  // ラベルとポイントのマッピング
 }
 
 
@@ -204,8 +205,9 @@ const YosemonAnswer: React.FC = () => {
                 {result.userAnswer.map((userLabel, userIndex) => {
                   const correctLabel = result.correctAnswer[userIndex]
                   const isPositionCorrect = userLabel === correctLabel
-                  // バックエンドからすでにソート済みで受け取っているので、直接インデックスでアクセス
-                  const answerInfo = result.answers[userIndex]
+                  // labelPointsからラベルに対応するポイントを取得
+                  const point = result.labelPoints ? result.labelPoints[correctLabel] : 
+                                (result.answers[userIndex] ? result.answers[userIndex].point : 0)
 
                   return (
                     <div key={userIndex} className="yosemon-answer-row">
@@ -235,7 +237,7 @@ const YosemonAnswer: React.FC = () => {
                         >
                           {correctLabel}
                         </span>
-                        <span className="yosemon-answer-point">{answerInfo.point}目</span>
+                        <span className="yosemon-answer-point">{point}目</span>
                       </div>
                     </div>
                   )
