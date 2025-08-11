@@ -103,6 +103,7 @@ const YosemonProblem: React.FC = () => {
         credentials: 'include',
         body: JSON.stringify({
           userAnswer: answerOrder.join(','),
+          shuffledAnswers: problem.answers
         }),
       })
 

@@ -127,13 +127,13 @@ router.post('/problems/:id/answer', authenticateUser, async (req: Request, res: 
   try {
     const problemNumber = parseInt(req.params.id);
     const userId = req.user?.id;
-    const { userAnswer } = req.body; // 例: "A,C,B,D"
+    const { userAnswer, shuffledAnswers } = req.body; // 例: userAnswer="A,C,B,D", shuffledAnswers=[{label:"A", coordinate:"K3"}, ...]
     
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    if (!userAnswer || typeof userAnswer !== 'string') {
+    if (!userAnswer || typeof userAnswer !== 'string' || !shuffledAnswers) {
       return res.status(400).json({ error: 'Invalid answer format' });
     }
     
@@ -154,10 +154,28 @@ router.post('/problems/:id/answer', authenticateUser, async (req: Request, res: 
     // ユーザーの回答を配列に変換
     const userAnswerArray = userAnswer.split(',').map(s => s.trim());
     
-    // 正解の順序を取得（アルファベット順）
-    const correctOrder = problem.answers
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((_, index) => String.fromCharCode(65 + index));
+    // shuffledAnswersのラベルと座標のマッピングを作成
+    const labelToCoordinate: { [key: string]: string } = {};
+    shuffledAnswers.forEach((ans: any) => {
+      labelToCoordinate[ans.label] = ans.coordinate;
+    });
+    
+    // 各答えのポイントを取得
+    const coordinateToPoint: { [key: string]: number } = {};
+    problem.answers.forEach(ans => {
+      coordinateToPoint[ans.coordinate] = ans.point;
+    });
+    
+    // shuffledAnswersの各ラベルに対応するポイントを取得し、ポイントの降順でソート
+    const answersWithPoints = shuffledAnswers.map((ans: any) => ({
+      label: ans.label,
+      coordinate: ans.coordinate,
+      point: coordinateToPoint[ans.coordinate] || 0
+    }));
+    
+    // ポイントの降順でソートして正解の順序を決定
+    const sortedByPoints = [...answersWithPoints].sort((a, b) => b.point - a.point);
+    const correctOrder = sortedByPoints.map(ans => ans.label);
     
     // 正解判定
     const isCorrect = userAnswerArray.length === correctOrder.length &&
@@ -232,17 +250,22 @@ router.get('/problems/:id/user-answer', authenticateUser, async (req: Request, r
     // ユーザーの回答を配列に変換
     const userAnswerArray = userAnswer.userAnswer.split(',').map(s => s.trim());
     
-    // 正解の順序を取得（アルファベット順）
-    const correctOrder = problem.answers
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .map((_, index) => String.fromCharCode(65 + index));
+    // 注意: 過去の回答を表示する際は、元のシャッフル順序が不明なため、
+    // ポイントの降順での順序を表示
+    // answersをポイントの降順でソート
+    const sortedByPoint = [...problem.answers].sort((a, b) => b.point - a.point);
+    
+    // ポイントの降順での正解順序（仮のラベル付け）
+    // 実際の正解順序は回答時のshuffledAnswersに依存するため、
+    // ここでは参考値として表示
+    const referenceOrder = sortedByPoint.map((_, index) => String.fromCharCode(65 + index));
     
     // Answer.tsxが期待する形式で返す
     res.json({
       result: {
         isCorrect: userAnswer.isCorrect,
         userAnswer: userAnswerArray,
-        correctAnswer: correctOrder,
+        correctAnswer: referenceOrder, // 参考値として提供
         answers: problem.answers.map(answer => ({
           coordinate: answer.coordinate,
           point: answer.point
