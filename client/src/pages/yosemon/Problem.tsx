@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import YosemonBoard from '../../components/YosemonBoard'
 import { useAuth } from '../../contexts/AuthContext'
+import { useYosemonProblem } from '../../contexts/YosemonProblemContext'
 import { LoginButton } from '../../components/LoginButton'
 import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
 import '../../styles/Yosemon.css'
@@ -22,6 +23,7 @@ const YosemonProblem: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
+  const { setProblemData } = useYosemonProblem()
   const [problem, setProblem] = useState<ProblemData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -44,6 +46,8 @@ const YosemonProblem: React.FC = () => {
       if (response.ok) {
         const data = await response.json()
         setProblem(data)
+        // Contextに問題データを保存
+        setProblemData(problemId, data)
         // 初期順序を設定
         setAnswerOrder(data.answers.map((a: any) => a.label))
       } else if (response.status === 404) {

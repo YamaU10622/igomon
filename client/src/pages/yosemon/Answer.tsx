@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import YosemonBoard from '../../components/YosemonBoard'
 import { LoginButton } from '../../components/LoginButton'
 import { getCurrentTurnFromSGF } from '../../utils/sgf-helpers'
+import { useYosemonProblem } from '../../contexts/YosemonProblemContext'
 import '../../styles/Yosemon.css'
 
 interface AnswerResult {
@@ -19,6 +20,7 @@ const YosemonAnswer: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const { getProblemData } = useYosemonProblem()
   const [result, setResult] = useState<AnswerResult | null>(null)
   const [problem, setProblem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -27,7 +29,16 @@ const YosemonAnswer: React.FC = () => {
     // ナビゲーションのstateから結果を取得
     if (location.state && (location.state as any).result) {
       setResult((location.state as any).result)
-      fetchProblem()
+      
+      // まずContextから問題データを取得
+      const cachedProblem = getProblemData(id || '')
+      if (cachedProblem) {
+        setProblem(cachedProblem)
+        setLoading(false)
+      } else {
+        // Contextにない場合はAPIから取得
+        fetchProblem()
+      }
       
       // 表示済み問題として記録
       const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
@@ -43,16 +54,23 @@ const YosemonAnswer: React.FC = () => {
 
   const fetchAnswerData = async () => {
     try {
-      // 問題データを取得
-      const problemResponse = await fetch(`/api/yosemon/problems/${id}`, {
-        credentials: 'include',
-      })
+      // まずContextから問題データを取得
+      const cachedProblem = getProblemData(id || '')
+      if (cachedProblem) {
+        setProblem(cachedProblem)
+      } else {
+        // Contextにない場合はAPIから取得
+        const problemResponse = await fetch(`/api/yosemon/problems/${id}`, {
+          credentials: 'include',
+        })
 
-      if (problemResponse.ok) {
-        const problemData = await problemResponse.json()
-        setProblem(problemData)
-        
-        // ユーザーの回答履歴を取得
+        if (problemResponse.ok) {
+          const problemData = await problemResponse.json()
+          setProblem(problemData)
+        }
+      }
+      
+      // ユーザーの回答履歴を取得
         const answerResponse = await fetch(`/api/yosemon/problems/${id}/user-answer`, {
           credentials: 'include',
         })
@@ -76,7 +94,6 @@ const YosemonAnswer: React.FC = () => {
           // 回答取得に失敗した場合は問題ページへリダイレクト
           navigate(`/yosemon/problems/${id}`)
         }
-      }
     } catch (error) {
       console.error('Error fetching answer data:', error)
       navigate(`/yosemon/problems/${id}`)
