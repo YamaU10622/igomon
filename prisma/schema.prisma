@@ -109,7 +109,7 @@ model YosemonAnswer {
   id          Int            @id @default(autoincrement())
   problemId   Int            @map("problem_id")
   coordinate  String         // 座標（例: "L11"）
-  point       Int            // 目数
+  point       Float          // 目数
   orderIndex  Int            @map("order_index") // 正解順序（0が最も価値が高い）
   
   problem     YosemonProblem @relation(fields: [problemId], references: [id])
