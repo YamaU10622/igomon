@@ -56,10 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const currentPath = window.location.pathname
     const searchParams = window.location.search
 
-    // yosemonページからの場合
+    // yosemonページからの場合、完全なパスを保持してリダイレクト
     if (currentPath.includes('/yosemon')) {
-      // /yosemonにリダイレクトするようにredirectパラメータを設定
-      window.location.href = `/login?redirect=${encodeURIComponent('/yosemon')}`
+      // 現在のyosemonページの完全なパスをredirectパラメータに設定
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
     } 
     // 回答ページからの場合、問題IDを含める
     else if (currentPath.includes('/questionnaire/')) {
