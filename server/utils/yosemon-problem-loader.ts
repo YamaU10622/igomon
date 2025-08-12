@@ -14,14 +14,14 @@ interface SelectionJson {
 
 // 座標の検証（19路盤）
 function isValidCoordinate(coordinate: string): boolean {
-  const match = coordinate.match(/^([A-S])(\d{1,2})$/);
+  const match = coordinate.match(/^([A-T])(\d{1,2})$/);
   if (!match) return false;
   
   const col = match[1];
   const row = parseInt(match[2]);
   
   // A-S (I を除く) で 1-19 の範囲
-  const validCols = 'ABCDEFGHJKLMNOPQRS'; // I を除く
+  const validCols = 'ABCDEFGHJKLMNOPQRST'; // I を除く
   return validCols.includes(col) && row >= 1 && row <= 19;
 }
 
