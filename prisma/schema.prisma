@@ -127,12 +127,13 @@ model YosemonUserAnswer {
   userAnswer    String         @map("user_answer") // ユーザーの回答順序（例: "A,C,B,D"）
   isCorrect     Boolean        @map("is_correct")
   createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   
   problem       YosemonProblem @relation(fields: [problemId], references: [id])
   user          User           @relation(fields: [userId], references: [id])
 
+  @@unique([problemId, userId])
   @@index([problemId])
   @@index([userId])
-  @@index([problemId, userId])
   @@map("yosemon_user_answers")
 }
