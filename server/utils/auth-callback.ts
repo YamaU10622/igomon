@@ -340,6 +340,13 @@ export async function handleAuthCallback({
     return res.redirect(`/results/${problemId}`)
   }
 
+  // リダイレクトパスが指定されている場合（yosemonページからの遷移）
+  const redirectPath = req.session.redirectPath
+  if (redirectPath) {
+    delete req.session.redirectPath
+    return res.redirect(redirectPath)
+  }
+
   // 通常のログイン完了
   res.redirect('/')
 }

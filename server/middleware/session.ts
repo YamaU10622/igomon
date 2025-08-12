@@ -27,6 +27,8 @@ declare module 'express-session' {
     }
     // 問題ごとのシャッフル順序を保存
     shuffleOrders?: Record<string, number[]>
+    // リダイレクトパス（yosemonページからの遷移用）
+    redirectPath?: string
   }
 }
 

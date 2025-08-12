@@ -66,6 +66,11 @@ router.get('/x', async (req, res) => {
       req.session.redirectProblemId = req.query.problem_id as string
     }
 
+    // リダイレクトパラメータがある場合（yosemonページからの遷移）
+    if (req.query.redirect) {
+      req.session.redirectPath = decodeURIComponent(req.query.redirect as string)
+    }
+
     // セッション保存を確実にする
     await new Promise<void>((resolve, reject) => {
       req.session.save((err) => {
