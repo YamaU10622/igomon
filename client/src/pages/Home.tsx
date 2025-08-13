@@ -113,7 +113,7 @@ export function Home() {
         </div>
         <div>
           <a href="/yosemon" className="yosemon-link-button">
-            よせもんへ
+            よせもん（β版）へ
           </a>
         </div>
       </header>

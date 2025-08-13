@@ -27,8 +27,6 @@ const YosemonHome: React.FC = () => {
     fetchProblems()
   }, [user])
 
-
-
   // ユーザーが回答済みかどうかをチェック
   useEffect(() => {
     const checkAnsweredStatus = async () => {
@@ -87,8 +85,6 @@ const YosemonHome: React.FC = () => {
     }
   }
 
-
-
   if (loading) {
     return (
       <div className="yosemon-loading">
@@ -120,10 +116,21 @@ const YosemonHome: React.FC = () => {
     <div className="home-page yosemon-home">
       <LoginButton />
       <header>
-        <h1>よせもん</h1>
+        <h1>よせもん（β版）</h1>
         <a href="/" className="igomon-link-button">
           いごもんへ
         </a>
+        <div className="yosemon-notice" style={{
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffc107',
+          borderRadius: '4px',
+          padding: '10px 15px',
+          marginTop: '10px',
+          fontSize: '14px',
+          color: '#856404'
+        }}>
+          <strong>テストリリース中</strong>：現在ベータ版として公開しています。問題は随時追加・更新されますので、定期的にチェックしてみてください。
+        </div>
       </header>
 
       <main>
@@ -144,12 +151,12 @@ const YosemonHome: React.FC = () => {
                       alt={`No.${problem.problemNumber}`}
                       onError={(e) => {
                         // 画像が存在しない場合はプレースホルダーを表示
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'yosemon-board-placeholder';
-                        placeholder.innerHTML = '<div class="yosemon-loading-spinner"></div>';
-                        target.parentNode?.appendChild(placeholder);
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const placeholder = document.createElement('div')
+                        placeholder.className = 'yosemon-board-placeholder'
+                        placeholder.innerHTML = '<div class="yosemon-loading-spinner"></div>'
+                        target.parentNode?.appendChild(placeholder)
                       }}
                     />
                     <div className="problem-id-overlay">No.{problem.problemNumber}</div>
