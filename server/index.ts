@@ -16,11 +16,13 @@ import path from 'path'
 import apiRoutes from './routes/api'
 import authRoutes from './routes/auth'
 import authGoogleRoutes from './routes/auth-google'
+import yosemonRoutes from './routes/yosemon'
 import { initializeSessionMiddleware, closeRedisConnection } from './middleware/session'
 import { ProblemWatcher } from './utils/file-watcher'
 import { loadProblemFromDirectory } from './utils/problem-loader'
 import { generateProblemHTML } from './utils/html-generator'
 import { getProblems } from '../lib/database'
+import { initializeYosemonProblems } from './utils/yosemon-problem-loader'
 
 const app = express()
 if (process.env.NODE_ENV === 'production') {
@@ -76,6 +78,12 @@ async function initializeServer() {
   // 静的ファイルのデバッグログ
   console.log('Static files serving from:', path.join(rootDir, 'public/dist'))
 
+  // API ルート（静的ファイルより先に設定）
+  app.use('/api', apiRoutes)
+  app.use('/auth', authRoutes)
+  app.use('/auth', authGoogleRoutes)
+  app.use('/api/yosemon', yosemonRoutes)
+
   // placeholder-board.pngを特定のルートで配信
   app.get('/placeholder-board.png', (_req: Request, res: Response) => {
     res.sendFile(path.join(rootDir, 'public/placeholder-board.png'))
@@ -85,11 +93,6 @@ async function initializeServer() {
   app.use('/wgo', express.static(path.join(rootDir, 'public/wgo'))) // WGo.js配信
   app.use('/problems', express.static(path.join(rootDir, 'public/problems')))
   app.use('/ogp', express.static(path.join(rootDir, 'public/ogp')))
-
-  // API ルート
-  app.use('/api', apiRoutes)
-  app.use('/auth', authRoutes)
-  app.use('/auth', authGoogleRoutes)
 
   // WebSocket接続処理
   io.on('connection', async (socket) => {
@@ -106,6 +109,9 @@ async function initializeServer() {
 
   // ファイル監視を開始
   problemWatcher = new ProblemWatcher(io)
+  
+  // よせもん問題を初期化
+  await initializeYosemonProblems()
 
   // 環境変数からサイトURLを取得（デフォルトは開発環境）
   const siteUrl = process.env.SITE_URL || `http://localhost:${port}`

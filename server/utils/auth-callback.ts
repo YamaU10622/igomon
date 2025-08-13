@@ -167,6 +167,7 @@ export async function handleAuthCallback({
   const questionnaireProblemId = req.session.questionnaireProblemId
   const redirectToResults = req.session.redirectToResults
   const redirectProblemId = req.session.redirectProblemId
+  const pendingYosemonAnswer = req.session.pendingYosemonAnswer
 
   // セッションの一時データをクリーンアップ
   delete req.session.codeVerifier
@@ -176,17 +177,19 @@ export async function handleAuthCallback({
   delete req.session.questionnaireProblemId
   delete req.session.redirectToResults
   delete req.session.redirectProblemId
+  delete req.session.pendingYosemonAnswer
 
-  // 一時保存した回答データがある場合の処理
-  if (pendingAnswer) {
+  // 通常の回答データの場合（Yosemonではない）
+  if (pendingAnswer && !('userAnswer' in pendingAnswer)) {
     const answerData = pendingAnswer
 
     try {
-      // 回答済みかチェック
+      // 回答済みかチェック（削除されていない回答のみ）
       const existingAnswer = await prisma.answer.findFirst({
         where: {
           userUuid: user.uuid,
           problemId: answerData.problemId,
+          isDeleted: false,
         },
       })
 
@@ -273,12 +276,75 @@ export async function handleAuthCallback({
     }
   }
 
+  // Yosemon回答データがある場合の処理
+  if (pendingYosemonAnswer) {
+    const yosemonData = pendingYosemonAnswer
+    console.log('Yosemonデータ処理開始:', yosemonData)
+
+    try {
+      // 問題データを取得（shuffledAnswersの取得のため）
+      const problemResponse = await fetch(
+        `http://localhost:3000/api/yosemon/problems/${yosemonData.problemId}`,
+        {
+          headers: {
+            Cookie: req.headers.cookie || '',
+          },
+        },
+      )
+
+      if (!problemResponse.ok) {
+        console.error('Yosemon問題取得エラー:', problemResponse.status)
+        return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
+      }
+
+      const problemData = await problemResponse.json()
+
+      // Yosemon APIに回答を送信
+      const response = await fetch(
+        `http://localhost:3000/api/yosemon/problems/${yosemonData.problemId}/answer`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: req.headers.cookie || '',
+          },
+          body: JSON.stringify({
+            userAnswer: yosemonData.userAnswer,
+            shuffledAnswers: problemData.answers, // 問題の回答データを含める
+          }),
+        },
+      )
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Yosemon回答送信成功、Answerページへリダイレクト')
+        // Yosemon Answerページへリダイレクト
+        return res.redirect(`/yosemon/problems/answers/${yosemonData.problemId}`)
+      } else {
+        console.error('Yosemon回答送信エラー:', response.status, await response.text())
+        // エラーの場合はYosemon Problemページへ戻る
+        return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
+      }
+    } catch (error) {
+      console.error('Yosemon回答処理エラー:', error)
+      // エラーの場合はYosemon Problemページへ戻る
+      return res.redirect(`/yosemon/problems/${yosemonData.problemId}`)
+    }
+  }
+
   // 結果ページへのリダイレクトが必要な場合
   if (redirectToResults && redirectProblemId) {
     const problemId = redirectProblemId
 
     // 結果ページへリダイレクト
     return res.redirect(`/results/${problemId}`)
+  }
+
+  // リダイレクトパスが指定されている場合（yosemonページからの遷移）
+  const redirectPath = req.session.redirectPath
+  if (redirectPath) {
+    delete req.session.redirectPath
+    return res.redirect(redirectPath)
   }
 
   // 通常のログイン完了

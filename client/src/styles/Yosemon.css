@@ -1,0 +1,428 @@
+/* よせもんページ全体のスタイル */
+
+/* ホームページ - メインのApp.cssのスタイルを活用 */
+.yosemon-board-placeholder {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #f5deb3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* よせもんページのサムネイル背景 */
+.yosemon-home .problem-thumbnail {
+  background-color: #f5deb3 !important;
+}
+
+/* サムネイル内のcanvas要素のスタイル調整 */
+.problem-thumbnail canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+.yosemon-board-grid {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  right: 5%;
+  bottom: 5%;
+}
+
+.yosemon-board-line-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #333;
+  opacity: 0.3;
+}
+
+.yosemon-board-line-h:nth-child(1) {
+  top: 0%;
+}
+.yosemon-board-line-h:nth-child(2) {
+  top: 11%;
+}
+.yosemon-board-line-h:nth-child(3) {
+  top: 22%;
+}
+.yosemon-board-line-h:nth-child(4) {
+  top: 33%;
+}
+.yosemon-board-line-h:nth-child(5) {
+  top: 44%;
+}
+.yosemon-board-line-h:nth-child(6) {
+  top: 55%;
+}
+.yosemon-board-line-h:nth-child(7) {
+  top: 66%;
+}
+.yosemon-board-line-h:nth-child(8) {
+  top: 77%;
+}
+.yosemon-board-line-h:nth-child(9) {
+  top: 88%;
+}
+
+.yosemon-board-line-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #333;
+  opacity: 0.3;
+}
+
+.yosemon-board-line-v:nth-child(10) {
+  left: 0%;
+}
+.yosemon-board-line-v:nth-child(11) {
+  left: 11%;
+}
+.yosemon-board-line-v:nth-child(12) {
+  left: 22%;
+}
+.yosemon-board-line-v:nth-child(13) {
+  left: 33%;
+}
+.yosemon-board-line-v:nth-child(14) {
+  left: 44%;
+}
+.yosemon-board-line-v:nth-child(15) {
+  left: 55%;
+}
+.yosemon-board-line-v:nth-child(16) {
+  left: 66%;
+}
+.yosemon-board-line-v:nth-child(17) {
+  left: 77%;
+}
+.yosemon-board-line-v:nth-child(18) {
+  left: 88%;
+}
+
+/* よせもん用の問題情報表示 */
+.yosemon-problem-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.yosemon-status-text {
+  font-weight: 600;
+}
+
+.yosemon-status-text.correct {
+  color: #4caf50;
+}
+
+.yosemon-status-text.incorrect {
+  color: #f44336;
+}
+
+.yosemon-status-text.unanswered {
+  color: #666;
+}
+
+/* よせもん 出題・解答ページ用スタイル */
+.yosemon-answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.yosemon-form-header h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.yosemon-form-instruction {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.yosemon-answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.yosemon-answer-option {
+  background: transparent;
+  border: 2px solid #333;
+  padding: 16px;
+  border-radius: 8px;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 350px;
+}
+
+.yosemon-answer-option:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.yosemon-answer-option.dragging {
+  opacity: 0.8;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: rotate(2deg);
+}
+
+.yosemon-option-label {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+}
+
+.yosemon-option-coordinate {
+  font-size: 16px;
+  color: #555;
+}
+
+/* 結果表示 */
+.yosemon-result-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.yosemon-answer-table {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.yosemon-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.yosemon-answer-user-container {
+  position: relative;
+  display: inline-block;
+}
+
+.yosemon-answer-user {
+  background: transparent;
+  border: 2px solid #333;
+  color: black;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 14px 35px;
+  border-radius: 4px;
+  text-align: center;
+  display: block;
+  width: 280px;
+}
+
+.yosemon-answer-mark-overlay {
+  position: absolute;
+  top: 45%;
+  left: 88%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.mark-correct,
+.mark-incorrect {
+  font-size: 60px;
+  font-weight: bold;
+  color: #ff0000;
+  opacity: 0.8;
+}
+
+.yosemon-answer-correct-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.yosemon-answer-correct-text {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  min-width: 18px;
+}
+
+.yosemon-answer-point {
+  font-size: 18px;
+  color: #4169e1;
+  font-weight: bold;
+}
+
+.yosemon-next-problem-button {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 20px;
+  background-color: #ff5722;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  width: 145px;
+}
+
+.yosemon-next-problem-button:hover {
+  background-color: #e64a19;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+}
+
+.yosemon-next-problem-button:disabled {
+  background-color: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  /* questionnaire-contentと同じレイアウト設定を適用 */
+  .questionnaire-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* board-wrapperのスタイルをモバイル対応 */
+  .board-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* form-wrapperのスタイルをモバイル対応 */
+  .form-wrapper {
+    width: 100%;
+  }
+
+  /* 解答ページのレイアウト調整 */
+  .yosemon-answer-row {
+    gap: 8px;
+  }
+
+  .yosemon-answer-user-container {
+    min-width: 30px;
+    flex-shrink: 0;
+  }
+
+  .yosemon-answer-user {
+    font-size: 14px;
+  }
+
+  .yosemon-answer-correct-container {
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .yosemon-answer-correct-text {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .yosemon-answer-point {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .yosemon-answer-mark-overlay {
+    font-size: 12px;
+  }
+
+  /* 既存のyosemonスタイル */
+  .yosemon-problem-container,
+  .yosemon-answer-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .yosemon-board-section {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .yosemon-answer-section,
+  .yosemon-result-section {
+    width: 100%;
+    max-width: none;
+    flex: none;
+  }
+
+  .yosemon-problems-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .yosemon-problems-grid-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ローディング状態 */
+.yosemon-loading {
+  text-align: center;
+  padding: 50px;
+}
+
+.yosemon-loading-spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* エラー状態 */
+.yosemon-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 4px solid #f44336;
+}
+
+.yosemon-error h3 {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.yosemon-error p {
+  margin: 5px 0;
+}

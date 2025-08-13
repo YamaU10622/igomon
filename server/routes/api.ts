@@ -5,7 +5,7 @@ import { saveAnswer, getResults, deleteAnswer, hasUserAnswered } from '../../lib
 import { loadProblemFromDirectory } from '../utils/problem-loader'
 import { createProblem } from '../../src/app/api/problems/create/route'
 import prisma from '../../lib/database'
-import { requireAuth } from '../middleware/auth'
+import { requireAuth, authenticateUser } from '../middleware/auth'
 
 const router = express.Router() as any
 
@@ -145,12 +145,40 @@ router.post('/answers', requireAuth, async (req: Request, res: Response) => {
   }
 })
 
-// 結果取得（認証必須）
-router.get('/results/:problemId', requireAuth, async (req: Request, res: Response) => {
+// 結果取得（期限切れの場合は認証不要、期限内は認証必須）
+router.get('/results/:problemId', authenticateUser, async (req: Request, res: Response) => {
   try {
     const problemId = parseInt(req.params.problemId)
-    const results = await getResults(problemId)
+    
+    // 問題情報を取得して期限をチェック
+    const problem = await prisma.problem.findUnique({
+      where: { id: problemId }
+    })
 
+    if (!problem) {
+      return res.status(404).json({ error: '問題が見つかりません' })
+    }
+
+    // 期限内の場合は認証を要求
+    if (problem.deadline) {
+      const now = new Date()
+      const deadlineDate = new Date(problem.deadline)
+      
+      if (now < deadlineDate) {
+        // 期限内なので認証が必要
+        if (!req.user) {
+          return res.status(401).json({ error: '認証が必要です' })
+        }
+        
+        // ユーザーが回答済みかチェック
+        const hasAnswered = await hasUserAnswered(problemId, req.user.uuid)
+        if (!hasAnswered) {
+          return res.status(403).json({ error: '結果を見るには先に回答してください' })
+        }
+      }
+    }
+    
+    const results = await getResults(problemId)
     const currentUserUuid = req.user?.uuid // 認証済みの場合のみ存在
 
     // userUuidを隠蔽し、canDeleteフラグを追加

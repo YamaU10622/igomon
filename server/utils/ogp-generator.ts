@@ -22,7 +22,14 @@ export class OGPGenerator {
     this.cellSize = (this.boardSize - 2 * this.boardMargin) / (this.gridSize - 1)
   }
 
-  async generateOGPImage(sgfContent: string, problemId: number, maxMoves?: number): Promise<void> {
+  // 共通のOGP画像生成処理
+  private async generateOGPImageBase(
+    sgfContent: string,
+    problemId: number,
+    outputSubDir: string,
+    logPrefix: string,
+    maxMoves?: number
+  ): Promise<void> {
     const canvas = createCanvas(this.canvasWidth, this.canvasHeight)
     const ctx = canvas.getContext('2d') as any
 
@@ -50,7 +57,7 @@ export class OGPGenerator {
       process.env.NODE_ENV === 'production'
         ? path.join(__dirname, '../../..') // dist/server/utils から ルートへ
         : path.join(__dirname, '../..') // server/utils から ルートへ
-    const outputDir = path.join(rootDir, 'public/ogp')
+    const outputDir = path.join(rootDir, outputSubDir)
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true })
     }
@@ -59,7 +66,22 @@ export class OGPGenerator {
     const buffer = canvas.toBuffer('image/png')
     fs.writeFileSync(outputPath, buffer)
 
-    console.log(`OGP image generated: ${outputPath}`)
+    console.log(`${logPrefix}: ${outputPath}`)
+  }
+
+  async generateOGPImage(sgfContent: string, problemId: number, maxMoves?: number): Promise<void> {
+    await this.generateOGPImageBase(sgfContent, problemId, 'public/ogp', 'OGP image generated', maxMoves)
+  }
+
+  // よせもん問題用のOGP画像生成メソッド
+  async generateYosemonOGPImage(sgfContent: string, problemNumber: number, maxMoves?: number): Promise<void> {
+    await this.generateOGPImageBase(
+      sgfContent,
+      problemNumber,
+      'public/ogp/yosemon',
+      'Yosemon OGP image generated',
+      maxMoves
+    )
   }
 
   private drawBoard(ctx: any, boardX: number, boardY: number): void {
@@ -177,4 +199,14 @@ export async function generateOGPForProblem(
 ): Promise<void> {
   const generator = new OGPGenerator()
   await generator.generateOGPImage(sgfContent, problemId, maxMoves)
+}
+
+// よせもん問題用のOGP画像生成関数
+export async function generateOGPForYosemonProblem(
+  problemNumber: number,
+  sgfContent: string,
+  maxMoves?: number,
+): Promise<void> {
+  const generator = new OGPGenerator()
+  await generator.generateYosemonOGPImage(sgfContent, problemNumber, maxMoves)
 }

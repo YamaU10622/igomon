@@ -111,6 +111,11 @@ export function Home() {
             <span className="disconnected">● 接続中...</span>
           )}
         </div>
+        <div>
+          <a href="/yosemon" className="yosemon-link-button">
+            よせもん（β版）へ
+          </a>
+        </div>
       </header>
 
       {errorMessage && (
@@ -160,17 +165,7 @@ export function Home() {
                     : `/questionnaire/${problem.id}`
                 }
                 className="problem-card-link"
-                onClick={(e) => {
-                  // 結果公開の問題で未ログインの場合はログイン選択画面へ
-                  if (
-                    !isAuthenticated &&
-                    problem.deadline &&
-                    new Date() > new Date(problem.deadline)
-                  ) {
-                    e.preventDefault()
-                    window.location.href = `/login?from=results&problem_id=${problem.id}`
-                  }
-                }}
+
               >
                 <div className="problem-card">
                   <div className="problem-thumbnail">

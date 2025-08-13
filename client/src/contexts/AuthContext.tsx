@@ -56,8 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const currentPath = window.location.pathname
     const searchParams = window.location.search
 
+    // yosemonページからの場合、完全なパスを保持してリダイレクト
+    if (currentPath.includes('/yosemon')) {
+      // 現在のyosemonページの完全なパスをredirectパラメータに設定
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
+    } 
     // 回答ページからの場合、問題IDを含める
-    if (currentPath.includes('/questionnaire/')) {
+    else if (currentPath.includes('/questionnaire/')) {
       const problemId = currentPath.split('/').pop()
       window.location.href = `/login?from=questionnaire&problem_id=${problemId}`
     } else if (searchParams) {
