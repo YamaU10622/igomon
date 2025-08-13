@@ -120,16 +120,20 @@ const YosemonHome: React.FC = () => {
         <a href="/" className="igomon-link-button">
           いごもんへ
         </a>
-        <div className="yosemon-notice" style={{
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffc107',
-          borderRadius: '4px',
-          padding: '10px 15px',
-          marginTop: '10px',
-          fontSize: '14px',
-          color: '#856404'
-        }}>
-          <strong>テストリリース中</strong>：現在ベータ版として公開しています。問題は随時追加・更新されますので、定期的にチェックしてみてください。
+        <div
+          className="yosemon-notice"
+          style={{
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffc107',
+            borderRadius: '4px',
+            padding: '10px 15px',
+            marginTop: '10px',
+            fontSize: '14px',
+            color: '#856404',
+          }}
+        >
+          <strong>テストリリース中</strong>
+          ：現在ベータ版として公開しています。問題は1週間に10問程度追加していく予定なので、定期的にチェックしてみてください。
         </div>
       </header>
 
