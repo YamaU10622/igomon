@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { LoginButton } from '../../components/LoginButton'
-import YosemonBoardThumbnail from '../../components/YosemonBoardThumbnail'
+
 import '../../styles/Yosemon.css'
 
 interface Problem {
@@ -19,9 +19,7 @@ const YosemonHome: React.FC = () => {
   const [problems, setProblems] = useState<Problem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [boardPreviews, setBoardPreviews] = useState<{
-    [key: number]: { sgf: string; moves: number }
-  }>({})
+
   const [answeredMap, setAnsweredMap] = useState<{ [problemNumber: number]: boolean }>({})
   const { user, isAuthenticated } = useAuth()
 
@@ -29,12 +27,7 @@ const YosemonHome: React.FC = () => {
     fetchProblems()
   }, [user])
 
-  useEffect(() => {
-    // 各問題の碁盤プレビューを生成
-    problems.forEach((problem) => {
-      fetchBoardPreview(problem.problemNumber)
-    })
-  }, [problems])
+
 
   // ユーザーが回答済みかどうかをチェック
   useEffect(() => {
@@ -94,32 +87,7 @@ const YosemonHome: React.FC = () => {
     }
   }
 
-  const fetchBoardPreview = async (problemNumber: number) => {
-    try {
-      // 問題データを取得（SGFとmovesが含まれている）
-      const response = await fetch(`/api/yosemon/problems/${problemNumber}`, {
-        credentials: 'include',
-      })
 
-      if (response.ok) {
-        const data = await response.json()
-
-        setBoardPreviews((prev) => {
-          const newPreviews = {
-            ...prev,
-            [problemNumber]: {
-              sgf: data.sgf,
-              moves: data.moves || 0,
-            },
-          }
-
-          return newPreviews
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching board preview:', error)
-    }
-  }
 
   if (loading) {
     return (
@@ -171,16 +139,19 @@ const YosemonHome: React.FC = () => {
               >
                 <div className="problem-card">
                   <div className="problem-thumbnail">
-                    {boardPreviews[problem.problemNumber] ? (
-                      <YosemonBoardThumbnail
-                        sgf={boardPreviews[problem.problemNumber]?.sgf}
-                        moves={boardPreviews[problem.problemNumber]?.moves}
-                      />
-                    ) : (
-                      <div className="yosemon-board-placeholder">
-                        <div className="yosemon-loading-spinner"></div>
-                      </div>
-                    )}
+                    <img
+                      src={`/ogp/yosemon/problem_${problem.problemNumber}.png`}
+                      alt={`No.${problem.problemNumber}`}
+                      onError={(e) => {
+                        // 画像が存在しない場合はプレースホルダーを表示
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'yosemon-board-placeholder';
+                        placeholder.innerHTML = '<div class="yosemon-loading-spinner"></div>';
+                        target.parentNode?.appendChild(placeholder);
+                      }}
+                    />
                     <div className="problem-id-overlay">No.{problem.problemNumber}</div>
                   </div>
                   <div className="problem-info">

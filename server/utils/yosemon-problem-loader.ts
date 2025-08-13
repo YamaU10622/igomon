@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { generateOGPForYosemonProblem } from './ogp-generator';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -122,6 +123,10 @@ export async function loadYosemonProblems() {
             }
           });
         }
+        
+        // SGFファイルを読み込んでOGP画像を生成
+        const sgfContent = await fs.readFile(sgfPath, 'utf-8');
+        await generateOGPForYosemonProblem(dir.number, sgfContent, selectionData.moves);
         
         console.log(`Loaded problem ${dir.number}`);
         

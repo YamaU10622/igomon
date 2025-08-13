@@ -1,38 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { getLabelColor } from '../utils/label-colors'
-
-// SGFパース関数を直接定義（GoBoard.tsxと同じ実装）
-const parseSgfMoves = (sgfContent: string): Array<{ color: number; x: number; y: number }> => {
-  const moves: Array<{ color: number; x: number; y: number }> = []
-
-  try {
-    // 簡易的なSGFパーサー実装
-    // パスや空の手を除外し、実際の手のみを取得
-    const movePattern = /[BW]\[([a-s][a-s])\]/g
-    let match
-
-    while ((match = movePattern.exec(sgfContent)) !== null) {
-      const color = match[0][0] === 'B' ? 1 : -1 // B=1 (黒), W=-1 (白)
-      const coord = match[1]
-
-      if (coord && coord.length === 2) {
-        const x = coord.charCodeAt(0) - 'a'.charCodeAt(0)
-        const y = coord.charCodeAt(1) - 'a'.charCodeAt(0)
-
-        if (x >= 0 && x < 19 && y >= 0 && y < 19) {
-          moves.push({ color, x, y })
-        }
-      }
-    }
-
-    console.log('Parsed moves:', moves.length, 'moves')
-    console.log('First 5 moves:', moves.slice(0, 5))
-  } catch (error) {
-    console.error('SGFパースエラー:', error)
-  }
-
-  return moves
-}
+import { parseSgfMoves } from '../../../lib/sgf-utils'
 
 declare global {
   interface Window {

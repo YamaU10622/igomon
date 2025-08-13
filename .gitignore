@@ -16,6 +16,7 @@ prisma/*.db-journal
 
 # OGP images (generated)
 public/ogp/*.png
+public/ogp/yosemon/*.png
 
 # IDE
 .vscode/
