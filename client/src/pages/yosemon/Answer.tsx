@@ -188,7 +188,7 @@ const YosemonAnswer: React.FC = () => {
         <p className="problem-description">価値の高い順に並べてください</p>
 
         <div className="questionnaire-content">
-          <div className="board-wrapper board-wrapper-sticky">
+          <div className="board-wrapper">
             {problem && (
               <YosemonBoard
                 sgf={problem.sgf}

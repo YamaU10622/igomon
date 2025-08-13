@@ -231,7 +231,7 @@
   border-radius: 4px;
   text-align: center;
   display: block;
-  width: 320px;
+  width: 280px;
 }
 
 .yosemon-answer-mark-overlay {
@@ -260,7 +260,7 @@
   font-size: 20px;
   font-weight: bold;
   color: #333;
-  min-width: 30px;
+  min-width: 18px;
 }
 
 .yosemon-answer-point {
@@ -300,6 +300,58 @@
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
+  /* questionnaire-contentと同じレイアウト設定を適用 */
+  .questionnaire-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* board-wrapperのスタイルをモバイル対応 */
+  .board-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* form-wrapperのスタイルをモバイル対応 */
+  .form-wrapper {
+    width: 100%;
+  }
+
+  /* 解答ページのレイアウト調整 */
+  .yosemon-answer-row {
+    gap: 8px;
+  }
+
+  .yosemon-answer-user-container {
+    min-width: 30px;
+    flex-shrink: 0;
+  }
+
+  .yosemon-answer-user {
+    font-size: 14px;
+  }
+
+  .yosemon-answer-correct-container {
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .yosemon-answer-correct-text {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .yosemon-answer-point {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .yosemon-answer-mark-overlay {
+    font-size: 12px;
+  }
+
+  /* 既存のyosemonスタイル */
   .yosemon-problem-container,
   .yosemon-answer-container {
     flex-direction: column;
