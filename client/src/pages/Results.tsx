@@ -27,12 +27,7 @@ export function Results() {
   useEffect(() => {
     if (!problemId || authLoading) return
 
-    // 認証されていない場合は自動的にログインページへ
-    if (!isAuthenticated) {
-      // 認証ページへリダイレクト（結果ページを見るためのパラメータを追加）
-      window.location.href = `/login?from=results&problem_id=${problemId}`
-      return
-    }
+
 
     checkAnswerStatus()
   }, [problemId, isAuthenticated, authLoading])
@@ -48,14 +43,21 @@ export function Results() {
         const deadlineDate = new Date(problemData.deadline)
 
         if (now >= deadlineDate) {
-          // 期限切れの場合は回答状態に関わらず結果を表示
+          // 期限切れの場合は認証不要で結果を表示
           setProblem(problemData)
           loadResultsOnly()
           return
         }
       }
 
-      // 期限内の場合、ユーザーが回答済みかチェック
+      // 期限内の場合、認証チェック
+      if (!isAuthenticated) {
+        // 未ログインの場合はログインページへリダイレクト
+        window.location.href = `/login?from=results&problem_id=${problemId}`
+        return
+      }
+
+      // ログイン済みの場合、ユーザーが回答済みかチェック
       const answered = await hasUserAnswered(parseInt(problemId!))
 
       if (!answered) {
@@ -68,12 +70,12 @@ export function Results() {
       setProblem(problemData)
       loadResultsOnly()
     } catch (err) {
-      console.error('回答状態の確認に失敗しました - 詳細:', err)
+      console.error('回答状態の確認に失敗しました:', err)
       if (err instanceof Error) {
-        console.error('エラーメッセージ:', err.message)
-        console.error('エラースタック:', err.stack)
+        setError(`エラー: ${err.message}`)
+      } else {
+        setError('回答状態の確認に失敗しました')
       }
-      setError('回答状態の確認に失敗しました')
       setLoading(false)
     }
   }
@@ -158,15 +160,7 @@ export function Results() {
       <div className="error-page">
         <h2>エラー</h2>
         <p>{error}</p>
-        <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-          <p>認証状態: {isAuthenticated ? 'ログイン済み' : '未ログイン'}</p>
-          <p>問題ID: {problemId}</p>
-        </div>
-        {!isAuthenticated && (
-          <button onClick={login} style={{ marginRight: '10px' }}>
-            ログイン
-          </button>
-        )}
+
         <button onClick={() => navigate('/')}>トップへ戻る</button>
       </div>
     )
