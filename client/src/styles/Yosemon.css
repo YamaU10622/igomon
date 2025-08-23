@@ -336,6 +336,30 @@
   box-shadow: none;
 }
 
+/* スマートフォン対応 - 600px以下 */
+@media (max-width: 600px) {
+  /* よせもんページの問題リスト */
+  .yosemon-problems-list {
+    grid-template-columns: repeat(auto-fill, 150px);
+  }
+
+  /* よせもんページの問題カードリンク */
+  .yosemon-problem-card-link {
+    width: 150px;
+  }
+
+  /* よせもんページの問題カード */
+  .yosemon-problem-card {
+    width: 150px;
+  }
+
+  /* よせもんページのサムネイル */
+  .yosemon-home .problem-thumbnail {
+    width: 150px !important;
+    height: 150px !important;
+  }
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   /* questionnaire-contentと同じレイアウト設定を適用 */
