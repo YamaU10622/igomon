@@ -101,8 +101,8 @@ export class OGPGenerator {
     logPrefix: string,
     maxMoves?: number,
   ): Promise<void> {
-    // よせもん用：300×300pxの画像サイズ
-    const yosemonImageSize = 200
+    // よせもん用：180×180pxの画像サイズ
+    const yosemonImageSize = 180
     const scaleFactor = yosemonImageSize / this.boardSize // 0.5
 
     const canvas = createCanvas(yosemonImageSize, yosemonImageSize)

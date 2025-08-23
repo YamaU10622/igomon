@@ -138,7 +138,7 @@ const YosemonHome: React.FC = () => {
       </header>
 
       <main>
-        <div className="problems-list">
+        <div className="yosemon-problems-list">
           {problems.length === 0 ? (
             <p>問題がありません</p>
           ) : (
@@ -146,13 +146,16 @@ const YosemonHome: React.FC = () => {
               <Link
                 key={problem.problemNumber}
                 to={`/yosemon/problems/${problem.problemNumber}`}
-                className="problem-card-link"
+                className="yosemon-problem-card-link"
               >
-                <div className="problem-card">
+                <div className="yosemon-problem-card">
                   <div className="problem-thumbnail">
                     <img
                       src={`/ogp/yosemon/problem_${problem.problemNumber}.png`}
                       alt={`No.${problem.problemNumber}`}
+                      style={{
+                        objectFit: 'contain',
+                      }}
                       onError={(e) => {
                         // 画像が存在しない場合はプレースホルダーを表示
                         const target = e.target as HTMLImageElement
@@ -164,19 +167,6 @@ const YosemonHome: React.FC = () => {
                       }}
                     />
                     <div className="problem-id-overlay">No.{problem.problemNumber}</div>
-                  </div>
-                  <div className="problem-info">
-                    <div className="yosemon-problem-info">
-                      {problem.userStatus === 'correct' && (
-                        <span className="yosemon-status-text correct">正解</span>
-                      )}
-                      {problem.userStatus === 'incorrect' && (
-                        <span className="yosemon-status-text incorrect">不正解</span>
-                      )}
-                      {problem.userStatus === 'unanswered' && (
-                        <span className="yosemon-status-text unanswered">未回答</span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </Link>
