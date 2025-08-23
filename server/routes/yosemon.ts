@@ -208,10 +208,8 @@ router.post('/problems/:id/answer', authenticateUser, async (req: Request, res: 
     const sortedByPoints = [...answersWithPoints].sort((a, b) => b.point - a.point)
     const correctOrder = sortedByPoints.map((ans) => ans.label)
 
-    // 正解判定
-    const isCorrect =
-      userAnswerArray.length === correctOrder.length &&
-      userAnswerArray.every((val, index) => val === correctOrder[index])
+    // 正解判定（先頭の1件のみで判定）
+    const isCorrect = userAnswerArray.length > 0 && userAnswerArray[0] === correctOrder[0]
 
     // 回答を保存（既存の回答があれば更新、なければ作成）
     const savedAnswer = await prisma.yosemonUserAnswer.upsert({

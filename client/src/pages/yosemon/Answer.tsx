@@ -204,7 +204,8 @@ const YosemonAnswer: React.FC = () => {
               <div className="yosemon-answer-table">
                 {result.userAnswer.map((userLabel, userIndex) => {
                   const correctLabel = result.correctAnswer[userIndex]
-                  const isPositionCorrect = userLabel === correctLabel
+                  // 先頭の1件のみで正解判定（インデックス0の場合のみ比較）
+                  const isPositionCorrect = userIndex === 0 ? userLabel === correctLabel : false
                   // labelPointsからラベルに対応するポイントを取得
                   const point = result.labelPoints ? result.labelPoints[correctLabel] : 
                                 (result.answers[userIndex] ? result.answers[userIndex].point : 0)
@@ -221,11 +222,14 @@ const YosemonAnswer: React.FC = () => {
                           {userLabel}
                         </div>
                         <div className="yosemon-answer-mark-overlay">
-                          {isPositionCorrect ? (
-                            <span className="mark-correct">○</span>
-                          ) : (
-                            <span className="mark-incorrect">×</span>
-                          )}
+                          {/* 先頭の1件のみ○×を表示、2件目以降は表示しない */}
+                          {userIndex === 0 ? (
+                            isPositionCorrect ? (
+                              <span className="mark-correct">○</span>
+                            ) : (
+                              <span className="mark-incorrect">×</span>
+                            )
+                          ) : null}
                         </div>
                       </div>
                       <div className="yosemon-answer-correct-container">
