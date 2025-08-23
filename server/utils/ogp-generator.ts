@@ -75,13 +75,60 @@ export class OGPGenerator {
 
   // よせもん問題用のOGP画像生成メソッド
   async generateYosemonOGPImage(sgfContent: string, problemNumber: number, maxMoves?: number): Promise<void> {
-    await this.generateOGPImageBase(
+    await this.generateYosemonOGPImageBase(
       sgfContent,
       problemNumber,
       'public/ogp/yosemon',
       'Yosemon OGP image generated',
       maxMoves
     )
+  }
+
+  private async generateYosemonOGPImageBase(
+    sgfContent: string,
+    problemId: number,
+    outputSubDir: string,
+    logPrefix: string,
+    maxMoves?: number
+  ): Promise<void> {
+    // よせもん用：碁盤サイズに合わせたキャンバスを作成（余白なし）
+    const canvas = createCanvas(this.boardSize, this.boardSize)
+    const ctx = canvas.getContext('2d') as any
+
+    // 背景色を設定
+    ctx.fillStyle = '#f5deb3' // 薄い木目色
+    ctx.fillRect(0, 0, this.boardSize, this.boardSize)
+
+    // 碁盤を左上に配置（余白なし）
+    const boardX = 0
+    const boardY = 0
+
+    // 碁盤の背景（元の色を維持）
+    ctx.fillStyle = '#dcb068'
+    ctx.fillRect(boardX, boardY, this.boardSize, this.boardSize)
+
+    // 碁盤の線を描画
+    this.drawBoard(ctx, boardX, boardY)
+
+    // SGFから石の配置を読み込んで描画
+    const stones = this.parseSGF(sgfContent, maxMoves)
+    this.drawStones(ctx, stones, boardX, boardY)
+
+    // PNG画像として保存
+    const rootDir =
+      process.env.NODE_ENV === 'production'
+        ? path.join(__dirname, '../../..') // dist/server/utils から ルートへ
+        : path.join(__dirname, '../..') // server/utils から ルートへ
+    const outputDir = path.join(rootDir, outputSubDir)
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true })
+    }
+
+    const outputPath = path.join(outputDir, `problem_${problemId}.png`)
+    const buffer = canvas.toBuffer('image/png')
+    fs.writeFileSync(outputPath, buffer)
+
+    console.log(`${logPrefix}: ${outputPath}`)
   }
 
   private drawBoard(ctx: any, boardX: number, boardY: number): void {
