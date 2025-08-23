@@ -28,7 +28,7 @@ export class OGPGenerator {
     problemId: number,
     outputSubDir: string,
     logPrefix: string,
-    maxMoves?: number
+    maxMoves?: number,
   ): Promise<void> {
     const canvas = createCanvas(this.canvasWidth, this.canvasHeight)
     const ctx = canvas.getContext('2d') as any
@@ -70,17 +70,27 @@ export class OGPGenerator {
   }
 
   async generateOGPImage(sgfContent: string, problemId: number, maxMoves?: number): Promise<void> {
-    await this.generateOGPImageBase(sgfContent, problemId, 'public/ogp', 'OGP image generated', maxMoves)
+    await this.generateOGPImageBase(
+      sgfContent,
+      problemId,
+      'public/ogp',
+      'OGP image generated',
+      maxMoves,
+    )
   }
 
   // よせもん問題用のOGP画像生成メソッド
-  async generateYosemonOGPImage(sgfContent: string, problemNumber: number, maxMoves?: number): Promise<void> {
+  async generateYosemonOGPImage(
+    sgfContent: string,
+    problemNumber: number,
+    maxMoves?: number,
+  ): Promise<void> {
     await this.generateYosemonOGPImageBase(
       sgfContent,
       problemNumber,
       'public/ogp/yosemon',
       'Yosemon OGP image generated',
-      maxMoves
+      maxMoves,
     )
   }
 
@@ -89,11 +99,17 @@ export class OGPGenerator {
     problemId: number,
     outputSubDir: string,
     logPrefix: string,
-    maxMoves?: number
+    maxMoves?: number,
   ): Promise<void> {
-    // よせもん用：碁盤サイズに合わせたキャンバスを作成（余白なし）
-    const canvas = createCanvas(this.boardSize, this.boardSize)
+    // よせもん用：300×300pxの画像サイズ
+    const yosemonImageSize = 200
+    const scaleFactor = yosemonImageSize / this.boardSize // 0.5
+
+    const canvas = createCanvas(yosemonImageSize, yosemonImageSize)
     const ctx = canvas.getContext('2d') as any
+
+    // スケーリングを適用
+    ctx.scale(scaleFactor, scaleFactor)
 
     // 背景色を設定
     ctx.fillStyle = '#f5deb3' // 薄い木目色
