@@ -55,6 +55,12 @@
   background: none !important;
 }
 
+/* 問題番号オーバーレイ */
+.yosemon-home .problem-id-overlay {
+  display: flex;
+  align-items: center;
+}
+
 .yosemon-board-grid {
   position: absolute;
   top: 5%;

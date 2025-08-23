@@ -166,7 +166,39 @@ const YosemonHome: React.FC = () => {
                         target.parentNode?.appendChild(placeholder)
                       }}
                     />
-                    <div className="problem-id-overlay">No.{problem.problemNumber}</div>
+                    <div className="problem-id-overlay">
+                      {problem.userStatus === 'correct' && (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#66FF66"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ marginRight: '6px' }}
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      )}
+                      {problem.userStatus === 'incorrect' && (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#FF9999"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ marginRight: '6px' }}
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      )}
+                      <span>No.{problem.problemNumber}</span>
+                    </div>
                   </div>
                 </div>
               </Link>
