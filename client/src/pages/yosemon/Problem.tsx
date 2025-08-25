@@ -20,7 +20,6 @@ interface ProblemData {
   }>
 }
 
-
 const YosemonProblem: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -105,7 +104,7 @@ const YosemonProblem: React.FC = () => {
         credentials: 'include',
         body: JSON.stringify({
           userAnswer: answerOrder.join(','),
-          shuffledAnswers: problem.answers
+          shuffledAnswers: problem.answers,
         }),
       })
 
@@ -164,7 +163,9 @@ const YosemonProblem: React.FC = () => {
           </div>
         </div>
 
-        <p className="problem-description">価値の高い順にドラッグ移動させて並べてください</p>
+        <p className="problem-description">
+          価値が最も高い選択肢をドラッグして先頭に移動させてください
+        </p>
 
         <div className="questionnaire-content">
           <div className="board-wrapper">
@@ -201,7 +202,7 @@ const YosemonProblem: React.FC = () => {
                               <span
                                 className="yosemon-option-label"
                                 style={{
-                                  color: getLabelColor(label)
+                                  color: getLabelColor(label),
                                 }}
                               >
                                 {label}
