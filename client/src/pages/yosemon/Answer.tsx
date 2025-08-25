@@ -15,10 +15,8 @@ interface AnswerResult {
     coordinate: string
     point: number
   }>
-  labelPoints?: { [key: string]: number }  // ラベルとポイントのマッピング
+  labelPoints?: { [key: string]: number } // ラベルとポイントのマッピング
 }
-
-
 
 const YosemonAnswer: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -33,7 +31,7 @@ const YosemonAnswer: React.FC = () => {
     // ナビゲーションのstateから結果を取得
     if (location.state && (location.state as any).result) {
       setResult((location.state as any).result)
-      
+
       // まずContextから問題データを取得
       const cachedProblem = getProblemData(id || '')
       if (cachedProblem) {
@@ -43,7 +41,7 @@ const YosemonAnswer: React.FC = () => {
         // Contextにない場合はAPIから取得
         fetchProblem()
       }
-      
+
       // 表示済み問題として記録
       const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
       if (!viewedProblems.includes(id)) {
@@ -73,31 +71,31 @@ const YosemonAnswer: React.FC = () => {
           setProblem(problemData)
         }
       }
-      
-      // ユーザーの回答履歴を取得
-        const answerResponse = await fetch(`/api/yosemon/problems/${id}/user-answer`, {
-          credentials: 'include',
-        })
 
-        if (answerResponse.ok) {
-          const answerData = await answerResponse.json()
-          if (answerData && answerData.result) {
-            setResult(answerData.result)
-            
-            // 表示済み問題として記録
-            const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
-            if (!viewedProblems.includes(id)) {
-              viewedProblems.push(id)
-              sessionStorage.setItem('yosemonViewedProblems', JSON.stringify(viewedProblems))
-            }
-          } else {
-            // 回答がない場合は問題ページへリダイレクト
-            navigate(`/yosemon/problems/${id}`)
+      // ユーザーの回答履歴を取得
+      const answerResponse = await fetch(`/api/yosemon/problems/${id}/user-answer`, {
+        credentials: 'include',
+      })
+
+      if (answerResponse.ok) {
+        const answerData = await answerResponse.json()
+        if (answerData && answerData.result) {
+          setResult(answerData.result)
+
+          // 表示済み問題として記録
+          const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
+          if (!viewedProblems.includes(id)) {
+            viewedProblems.push(id)
+            sessionStorage.setItem('yosemonViewedProblems', JSON.stringify(viewedProblems))
           }
         } else {
-          // 回答取得に失敗した場合は問題ページへリダイレクト
+          // 回答がない場合は問題ページへリダイレクト
           navigate(`/yosemon/problems/${id}`)
         }
+      } else {
+        // 回答取得に失敗した場合は問題ページへリダイレクト
+        navigate(`/yosemon/problems/${id}`)
+      }
     } catch (error) {
       console.error('Error fetching answer data:', error)
       navigate(`/yosemon/problems/${id}`)
@@ -130,20 +128,20 @@ const YosemonAnswer: React.FC = () => {
       const allProblemsResponse = await fetch('/api/yosemon/problems', {
         credentials: 'include',
       })
-      
+
       if (!allProblemsResponse.ok) {
         navigate('/yosemon')
         return
       }
-      
+
       const allProblems = await allProblemsResponse.json()
       const viewedProblems = JSON.parse(sessionStorage.getItem('yosemonViewedProblems') || '[]')
-      
+
       // 未表示の問題を抽出
-      const unviewedProblems = allProblems.filter((p: any) => 
-        !viewedProblems.includes(p.problemNumber.toString())
+      const unviewedProblems = allProblems.filter(
+        (p: any) => !viewedProblems.includes(p.problemNumber.toString()),
       )
-      
+
       if (unviewedProblems.length === 0) {
         // 全問題を表示済みの場合、セッションストレージをクリアしてHomeへ
         sessionStorage.removeItem('yosemonViewedProblems')
@@ -185,7 +183,13 @@ const YosemonAnswer: React.FC = () => {
           </div>
         </div>
 
-        <p className="problem-description">価値の高い順に並べてください</p>
+        <p className="problem-description">
+          価値が最も高い選択肢をドラッグして先頭に移動させてください
+          <br />
+          <small style={{ display: 'block', color: '#666' }}>
+            ※ 解答の目数はKataGoのscoreLeadを用いて算出した値です
+          </small>
+        </p>
 
         <div className="questionnaire-content">
           <div className="board-wrapper">
@@ -207,8 +211,11 @@ const YosemonAnswer: React.FC = () => {
                   // 先頭の1件のみで正解判定（インデックス0の場合のみ比較）
                   const isPositionCorrect = userIndex === 0 ? userLabel === correctLabel : false
                   // labelPointsからラベルに対応するポイントを取得
-                  const point = result.labelPoints ? result.labelPoints[correctLabel] : 
-                                (result.answers[userIndex] ? result.answers[userIndex].point : 0)
+                  const point = result.labelPoints
+                    ? result.labelPoints[correctLabel]
+                    : result.answers[userIndex]
+                      ? result.answers[userIndex].point
+                      : 0
 
                   return (
                     <div key={userIndex} className="yosemon-answer-row">
@@ -216,7 +223,7 @@ const YosemonAnswer: React.FC = () => {
                         <div
                           className="yosemon-answer-user"
                           style={{
-                            color: getLabelColor(userLabel)
+                            color: getLabelColor(userLabel),
                           }}
                         >
                           {userLabel}
@@ -236,7 +243,7 @@ const YosemonAnswer: React.FC = () => {
                         <span
                           className="yosemon-answer-correct-text"
                           style={{
-                            color: getLabelColor(correctLabel)
+                            color: getLabelColor(correctLabel),
                           }}
                         >
                           {correctLabel}
